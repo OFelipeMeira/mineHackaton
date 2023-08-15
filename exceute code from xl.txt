@@ -1,0 +1,14 @@
+Sub teste()
+    Dim Rota As String
+    Rota = "C:\Program Files\Mozilla Firefox\firefox.exe"
+    VBA.Shell (Rota), vbMinimizedFocus
+End Sub
+
+
+
+Perguntar:
+- se é possivel mudar o tipo das caixas - Acontece mas não poderia
+- como confirmar se será usado ou não - Add botão para usar
+- scannear na antes ou depois do uso - a decidir (Paternoster apenas na saida das caixas) 
+    - se sim - confirmar o tipo de caixa?? - n precisa, se a leitura for depois
+- usar exatamente o mesmo app para todos os postos - Separar em diferentes .exe
