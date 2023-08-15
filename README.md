@@ -1,2 +1,2 @@
-# Hackathon
-Repo for sharing code
+# Hackathon - Version 2
+Repo to save adaptive versions
