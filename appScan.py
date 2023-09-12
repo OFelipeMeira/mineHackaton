@@ -1,12 +1,9 @@
 from tkinter import *
 from tkinter import messagebox
-import tkinter as tk
-from tkinter import ttk
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
 from User_Interface.Screens import scan_screen
-from time import sleep
 
 from datetime import datetime
 
@@ -20,7 +17,7 @@ _NO_BOX_SEARCHED = 'No box searched'
 class Screen:
     def __init__(self):
         self.window = Tk()
-        #self.window.attributes('-fullscreen', True)
+        self.window.attributes('-fullscreen', True)
         self.screen_state = "NULL"
         self.text = ""
         self.screen_width = self.window.winfo_screenwidth()

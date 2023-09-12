@@ -68,16 +68,6 @@ async def remove_paternoster_box(box_serial_number: str):
     box_id = (await Boxes.get(serial_number=box_serial_number)).box_id
     box = await Paternoster.get(pat_box_id=box_id, removed_date="")
     return box
-    a = box.insert_date
-    b = datetime.strptime(a,'%Y-%m-%d %H:%M:%S')
-    print( datetime.now() >= b+timedelta(days=1) )
-    
-    if datetime.now() >= b+timedelta(days=1):
-        print(box.insert_date)
-        box.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        await box.save()
-    else:
-        pass
 
     
 
