@@ -44,20 +44,20 @@ async def testes():
     await connector.connect()
 
     #-- inserindo caixas no paternoster:
-    #await connector.insert_paternoster("C123",1)
+#    await connector.insert_paternoster("C123",1)
     
 #    #--pegando as caixas do paternoster:
 #    boxes = await connector.get_all_paternoster_boxes()
 #    print(boxes[0])
 
-    msg = await connector.remove_paternoster("C123")
-    print(msg)
-
+    await connector.remove_paternoster("C123")
+    
 
 
 if __name__ == '__main__':
     #asyncio.run(create_data())
     #asyncio.run(Screen.Screen())
+    
     asyncio.run(testes())
 
 

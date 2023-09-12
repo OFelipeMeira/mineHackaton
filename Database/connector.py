@@ -26,9 +26,8 @@ class Paternoster(Model):
     pat_id = fields.IntField(pk=True)
     pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
     pat_row = fields.IntField()
-    insert_date = fields.DatetimeField()
-    remove_date = fields.DatetimeField()
-    removed = fields.BooleanField()
+    insert_date = fields.CharField(19)
+    removed_date = fields.CharField(19, default="")
     
     def __str__(self):
         return self.pat_id
@@ -61,41 +60,18 @@ async def create_box(type_id: int, serial_number: str, last_cleand=datetime.now(
 
 
 async def insert_paternoster(serial_number: str, pat_row:int):
-    insert_date=datetime.now()
-    remove_date=datetime.now() + timedelta(1)
+    insert_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     box = await Boxes.get(serial_number=serial_number)
-    await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, remove_date=remove_date, removed=False, pat_row=pat_row)
+    await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, pat_row=pat_row)
 
 async def remove_paternoster(box_serial_number: str):
     box_id = (await Boxes.get(serial_number=box_serial_number)).box_id
-    box = await Paternoster.get(pat_box_id=box_id)
-
-    temp = box.remove_date
-
-    agr = datetime.now()
-    await Paternoster.update_or_create(pat_box_id=box.pat_box, insert_date=box.insert_date, remove_date=agr, removed=False, pat_row=box.pat_row)
-    a = await Paternoster.get(pat_box_id=box_id)
-    
-    print("----------")
-    #print(f"INSERT DATE:\t{box.insert_date}\t {box.insert_date}")
-    #print(f"REMOVE DATE:\t{box.remove_date}\t {box.remove_date.tzinfo}")
-    
-    print(f"{temp}")
-    print(f"{a.remove_date}")
-    #print(f"{datetime.utcnow() < box.remove_date}")
-    
-#    if box.remove_date > datetime.utcnow():
-#        print("Can remove")
-    #     box.removed = True
-    #     box.save()
-    # else:
-    #     print("CANNOT REMOVE")
-    return "A"
-
-# async def get_all_paternoster_boxes():
-#     all_pat_boxes = await Paternoster.all()
-#     return all_pat_boxes
+    box = await Paternoster.get(pat_box_id=box_id, removed_date="")
+    #box = await Paternoster.filter(pat_box_id=box_id, removed_date="")
+    print(box.insert_date)
+    box.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    await box.save()
 
     
 
