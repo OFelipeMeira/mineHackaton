@@ -1,5 +1,5 @@
 from Database import connector
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 from User_Interface import Screen
 
@@ -44,21 +44,33 @@ async def testes():
     await connector.connect()
 
     #-- inserindo caixas no paternoster:
-#    await connector.insert_paternoster("C123",1)
+    await connector.insert_paternoster("C234",2)
     
 #    #--pegando as caixas do paternoster:
 #    boxes = await connector.get_all_paternoster_boxes()
 #    print(boxes[0])
 
-    await connector.remove_paternoster("C123")
+
+async def remove():
+    await connector.connect()
+    box = await connector.remove_paternoster_box("C123")
+    a = box.insert_date
+    b = datetime.strptime(a,'%Y-%m-%d %H:%M:%S')
     
+    if datetime.now() >= b+timedelta(days=1):
+        print(box.insert_date)
+        box.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        await box.save()
+    else:
+        print("CANNOT take off")
 
 
 if __name__ == '__main__':
     #asyncio.run(create_data())
     #asyncio.run(Screen.Screen())
     
-    asyncio.run(testes())
+    #asyncio.run(testes())
+    asyncio.run(remove())
 
 
 

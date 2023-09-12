@@ -1,6 +1,5 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from tortoise.functions import Sum
 from datetime import datetime, timedelta
 
 class Boxes(Model):
@@ -65,13 +64,20 @@ async def insert_paternoster(serial_number: str, pat_row:int):
     box = await Boxes.get(serial_number=serial_number)
     await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, pat_row=pat_row)
 
-async def remove_paternoster(box_serial_number: str):
+async def remove_paternoster_box(box_serial_number: str):
     box_id = (await Boxes.get(serial_number=box_serial_number)).box_id
     box = await Paternoster.get(pat_box_id=box_id, removed_date="")
-    #box = await Paternoster.filter(pat_box_id=box_id, removed_date="")
-    print(box.insert_date)
-    box.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    await box.save()
+    return box
+    a = box.insert_date
+    b = datetime.strptime(a,'%Y-%m-%d %H:%M:%S')
+    print( datetime.now() >= b+timedelta(days=1) )
+    
+    if datetime.now() >= b+timedelta(days=1):
+        print(box.insert_date)
+        box.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        await box.save()
+    else:
+        pass
 
     
 
