@@ -1,6 +1,5 @@
 from tkinter import *
 import tkinter as tk
-from tkinter import ttk
 
 def screen_scan(self):
         """
@@ -51,5 +50,5 @@ def screen_scan(self):
                               fg=self.setup_styles['btn_fg'],
                               font=self.setup_styles['entry_font'],
                               text=self.setup_variables['scanUseBox'],
-                              command=self.use_box)
+                              command=self.sync_use_box)
         useBoxBtn.place(relx=0.5, rely=0.85, relheight=0.1, relwidth=0.2, anchor='center')

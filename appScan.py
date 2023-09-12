@@ -5,16 +5,11 @@ from tkinter import ttk
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from User_Interface.Screens import scan_screen, config_screen, add_box_screen
+from User_Interface.Screens import scan_screen
 from time import sleep
 
 from datetime import datetime
 
-_BOX_ADD_ERROR = "Box adding error"
-_DUPLICATE_ERROR = "Box wit that serial number already exists"
-_ILLEGAL_BOX_NAME = "Box type does not exist"
-_ILLEGAL_BOX_VALUE = "For period (in days) and uses only integers are allowed."
-_ILLEGAL_VALUE_ERROR = "Box value error"
 _MISSING_DATABASE = "Database not connected"
 _DATABASE_CONNECTION_ERROR = "Database connection error"
 _UNKNOWN_BOX_ERROR = "Unkown box error"
@@ -25,7 +20,7 @@ _NO_BOX_SEARCHED = 'No box searched'
 class Screen:
     def __init__(self):
         self.window = Tk()
-        self.window.attributes('-fullscreen', True)
+        #self.window.attributes('-fullscreen', True)
         self.screen_state = "NULL"
         self.text = ""
         self.screen_width = self.window.winfo_screenwidth()
@@ -150,24 +145,36 @@ class Screen:
         self.setup_styles['scanStatus'] = '#D8D1CB'
 
     def key_pressed(self, key):
-        if (self.screen_state == "scan" or self.screen_state == "clean"):
-            self.text += key.char
-            #print(self.text)
-            if len(self.text) == 4:
-                if (self.screen_state == "scan"): 
-                    coroutine = self.get_data()
-                elif (self.screen_state == "clean"):
-                    coroutine = self.clean_box()
-                try:
-                    self.execute_async_method(coroutine)
-                except DoesNotExist:
-                     self.error_screen(_UNKNOWN_BOX_ERROR, _BOX_DOES_NOT_EXIST)
-                except DBConnectionError:
-                    self.error_screen(_DATABASE_CONNECTION_ERROR, _MISSING_DATABASE)
-                self.show_screen_scan()
-                self.text = ""
-            if len(self.text) > 4:
-                self.text = ""
+        self.text += key.char
+        if len(self.text) == 1:
+            self.text = self.text[0].upper()
+            print(self.text+ ":Tamanho1" )
+        print(self.text)
+        if len(self.text) == 4:
+            if self.text == self.setup_variables['scanNameText']:
+                coroutine = self.use_box()
+                print("A")
+            else:
+                coroutine = self.get_data()
+                print("text:" + self.text)
+                print("variable:"+ self.setup_variables['scanNameText'] )
+            try:
+                self.execute_async_method(coroutine)
+            except DoesNotExist:
+                    self.error_screen(_UNKNOWN_BOX_ERROR, _BOX_DOES_NOT_EXIST)
+            except DBConnectionError:
+                self.error_screen(_DATABASE_CONNECTION_ERROR, _MISSING_DATABASE)
+            self.show_screen_scan()
+            self.text = ""
+        if len(self.text) > 4:
+            self.text = ""
+
+    def sync_use_box(self):
+        try:
+            self.execute_async_method(self.use_box())
+            self.show_screen_scan()
+        except:
+            self.error_screen(_UNKNOWN_BOX_ERROR, _BOX_DOES_NOT_EXIST)
 
 if __name__ == "__main__":
     asyncio.run(Screen())

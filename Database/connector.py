@@ -1,6 +1,7 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from datetime import datetime
+from tortoise.functions import Sum
+from datetime import datetime, timedelta
 
 class Boxes(Model):
     box_id = fields.IntField(pk=True)
@@ -20,6 +21,18 @@ class Types(Model):
 
     def __str__(self):
         return self.name
+    
+class Paternoster(Model):
+    pat_id = fields.IntField(pk=True)
+    pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
+    pat_row = fields.IntField()
+    insert_date = fields.DatetimeField()
+    remove_date = fields.DatetimeField()
+    removed = fields.BooleanField()
+    
+    def __str__(self):
+        return self.pat_id
+   
 
 async def init():
     # Here we create a SQLite DB using file "db.sqlite3"
@@ -44,6 +57,47 @@ async def create_Type(name: str, max_num_uses: int, cleaning_period: int):
 async def create_box(type_id: int, serial_number: str, last_cleand=datetime.now(), uses=0):
     box_type = await Types.get(type_id=type_id)
     await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
+
+
+
+async def insert_paternoster(serial_number: str, pat_row:int):
+    insert_date=datetime.now()
+    remove_date=datetime.now() + timedelta(1)
+
+    box = await Boxes.get(serial_number=serial_number)
+    await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, remove_date=remove_date, removed=False, pat_row=pat_row)
+
+async def remove_paternoster(box_serial_number: str):
+    box_id = (await Boxes.get(serial_number=box_serial_number)).box_id
+    box = await Paternoster.get(pat_box_id=box_id)
+
+    temp = box.remove_date
+
+    agr = datetime.now()
+    await Paternoster.update_or_create(pat_box_id=box.pat_box, insert_date=box.insert_date, remove_date=agr, removed=False, pat_row=box.pat_row)
+    a = await Paternoster.get(pat_box_id=box_id)
+    
+    print("----------")
+    #print(f"INSERT DATE:\t{box.insert_date}\t {box.insert_date}")
+    #print(f"REMOVE DATE:\t{box.remove_date}\t {box.remove_date.tzinfo}")
+    
+    print(f"{temp}")
+    print(f"{a.remove_date}")
+    #print(f"{datetime.utcnow() < box.remove_date}")
+    
+#    if box.remove_date > datetime.utcnow():
+#        print("Can remove")
+    #     box.removed = True
+    #     box.save()
+    # else:
+    #     print("CANNOT REMOVE")
+    return "A"
+
+# async def get_all_paternoster_boxes():
+#     all_pat_boxes = await Paternoster.all()
+#     return all_pat_boxes
+
+    
 
 async def alter_period(box_type_name: str, new_period: int, new_uses = 0):
     return await alter_box(box_type_name, box_type_name, new_period, new_uses)
@@ -83,6 +137,3 @@ async def get_type(type_name: str):
 
 async def get_types():
     return await Types.all().values()
-
-
-    

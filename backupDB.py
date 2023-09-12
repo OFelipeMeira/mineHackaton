@@ -1,6 +1,6 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class Boxes(Model):
     box_id = fields.IntField(pk=True)
@@ -20,17 +20,6 @@ class Types(Model):
 
     def __str__(self):
         return self.name
-    
-class Paternoster(Model):
-    pat_id = fields.IntField(pk=True)
-    pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
-    insert_date = fields.DatetimeField()
-    remove_date = fields.DatetimeField()
-    removed = fields.BooleanField()
-    
-    def __str__(self):
-        return self.name
-
 
 async def init():
     # Here we create a SQLite DB using file "db.sqlite3"
@@ -43,11 +32,11 @@ async def init():
     # Generate the schema
     await Tortoise.generate_schemas()
 
-# async def connect():
-#     await Tortoise.init(
-#         db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
-#         modules={'models' : ['Database.connector']},
-#     )
+async def connect():
+    await Tortoise.init(
+        db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
+        modules={'models' : ['Database.connector']},
+    )
 
 async def create_Type(name: str, max_num_uses: int, cleaning_period: int):
     await Types.create(name = name, max_num_uses = max_num_uses , cleaning_period = cleaning_period)
@@ -55,32 +44,6 @@ async def create_Type(name: str, max_num_uses: int, cleaning_period: int):
 async def create_box(type_id: int, serial_number: str, last_cleand=datetime.now(), uses=0):
     box_type = await Types.get(type_id=type_id)
     await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
-
-
-
-async def insert_paternoster(box_id):
-    insert_date=datetime.now()
-    remove_date=datetime.now() + timedelta(1)
-
-    box = await Boxes.get(box_id=box_id)
-    await Paternoster.create(pat_box=box, insert_date=insert_date, remove_date=remove_date, removed=False)
-
-async def remove_paternoster(box_serial_number):
-    box_id = (await Boxes.get(serial_number=box_serial_number)).box_id
-    box = await Paternoster.get(pat_box_id=box_id)
-    print("----------")
-    print(box.insert_date)
-    print("----------")
-    # print(f"REMOVE DATE:{box.remove_date}")
-    # print(f"NOW:{datetime.now()}")
-    
-    if box.remove_date > datetime.utcnow():
-        print("Can remove")
-    #     box.removed = True
-    #     box.save()
-    # else:
-    #     print("CANNOT REMOVE")
-    
 
 async def alter_period(box_type_name: str, new_period: int, new_uses = 0):
     return await alter_box(box_type_name, box_type_name, new_period, new_uses)
@@ -120,6 +83,3 @@ async def get_type(type_name: str):
 
 async def get_types():
     return await Types.all().values()
-
-
-    

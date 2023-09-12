@@ -260,6 +260,8 @@ class Screen:
         self.setup_variables["scanNameText"] = box.serial_number
         self.setup_variables["scanCleaningDate"] = box.last_cleand
         self.defining_status(box)
+
+
     
     async def use_box(self):
         await connector.connect()
