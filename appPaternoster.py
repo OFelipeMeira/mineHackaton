@@ -1,10 +1,23 @@
 from tkinter import *
 from tkinter import messagebox
+import asyncio
+from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
+from Database import connector
+from User_Interface.Screens import paternoster_insert
 
-class Screen:
+from datetime import datetime
+
+_MISSING_DATABASE = "Database not connected"
+_DATABASE_CONNECTION_ERROR = "Database connection error"
+_UNKNOWN_BOX_ERROR = "Unkown box error"
+_BOX_DOES_NOT_EXIST = "This box does not exist in the database"
+_SEARCH_ERROR = "Box searching error"
+_NO_BOX_SEARCHED = 'No box searched'
+
+class Paternoster:
     def __init__(self):
         self.window = Tk()
-        self.window.attributes('-fullscreen', True)
+        #self.window.attributes('-fullscreen', True)
         self.screen_state = "NULL"
         self.text = ""
         self.screen_width = self.window.winfo_screenwidth()
@@ -19,7 +32,9 @@ class Screen:
             'btn_color': '#3D3D3D',         # Buttons - colors
             'btn_close_color': '#731D24',   # Button close - color
 
-            'entry_font': f'Arial, {self.screen_width*0.02:.0f}'       # Entry - Font
+            'entry_font': f'Arial, {self.screen_width*0.02:.0f}',       # Entry - Font
+
+            'scanStatus': '#D8D1CB'
         }
 
         # Setting up all the variables
@@ -27,29 +42,27 @@ class Screen:
         self.box_types = []
         self.setup_variables = {
 
-            'scanNameLabel': 'Código da caixa',
-            'scanNameText': '-',
+            'paternosterBoxLabel': 'Código da caixa',
+            'paternosterBoxText': '-',
 
-            'scanTypeLabel': 'Tipo da caixa:',
-            'scanTypeText': '-',
+            'paternosterRowLabel': 'Posição',
+            'paternosterRowText': '-',
 
-            'scanUsagesLabel': 'Usos:',
-            'scanUsagesQnt': '-',
-
-            'scanCleaningLabel': 'Ultima limpeza:',
-            'scanCleaningDate': 'XX/XX/XXXX',
-            'scanUseBox': 'Use Box'
         }
+
         self.window.bind("<Key>", self.key_pressed)
 
         # calling the main screen and the scanning screen
-        self.set_paternoster_screen(self)
+        self.show_paternoster_screen()
         
         # tkinter mainloop
         self.window.mainloop()
 
-    def set_paternoster_screen(self):
-        self.screen_state = "scan"
+
+    def show_paternoster_screen(self):
+        self.screen_state = "INSERT"
+        paternoster_insert.screen_paternoster(self)
+
 
     def key_pressed(self, key):
         self.text += key.char
@@ -57,20 +70,39 @@ class Screen:
             self.text = self.text[0].upper()
         print(self.text)
         if len(self.text) == 4:
-            if self.text == self.setup_variables['scanNameText']:
-                coroutine = self.use_box()
-                print("A")
-            else:
-                coroutine = self.get_data()
-                print("text:" + self.text)
-                print("variable:"+ self.setup_variables['scanNameText'] )
-            try:
-                self.execute_async_method(coroutine)
-            except DoesNotExist:
-                    self.error_screen(_UNKNOWN_BOX_ERROR, _BOX_DOES_NOT_EXIST)
-            except DBConnectionError:
-                self.error_screen(_DATABASE_CONNECTION_ERROR, _MISSING_DATABASE)
-            self.show_screen_scan()
-            self.text = ""
+            if self.screen_state == "INSERT":
+                a = self.get_box(self.text)
+                if a:
+                    print("achei a caixa")
+                print(type(a))
+
+                #self.show_paternoster_screen()
+                self.text = ""
+
+                        
+
+        #reseting sel.text after 4 carachteres
         if len(self.text) > 4:
             self.text = ""
+
+    # async def search_box(self, box_code):
+    #     await connector.connect()
+    #     box = await connector.get_box(box_code)
+    #     print(type(box))
+    #     print('-'*30)
+    #     return box
+
+    async def get_box(self, serial):
+        box = await connector.get_box(box_serial_number=serial)
+        return box
+    
+    def execute_async_method(self, task):
+        asyncio.get_event_loop().run_until_complete(task)
+        return task
+    
+    async def insert_paternoster(self, box_name:str):
+        if await connector.verify_box_paternoster(box_name):
+            await connector.insert_paternoster(box_name)
+
+if __name__ == "__main__":
+    asyncio.run(Paternoster())
