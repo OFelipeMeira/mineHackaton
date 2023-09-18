@@ -5,10 +5,7 @@ from tkinter import ttk
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from User_Interface.Screens import scan_screen, config_screen, add_box_screen
-
-from datetime import datetime  
-from datetime import timedelta  
+from AppConfigAssets import config_screen, add_box_screen
 
 _BOX_ADD_ERROR = "Box adding error"
 _DUPLICATE_ERROR = "Box wit that serial number already exists"

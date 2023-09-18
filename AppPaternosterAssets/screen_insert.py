@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 
-def screen_paternoster(self):
+def frame(self):
         """
         method to call the Scanning Screen
             where the user can Scan the QRCodes and see if he can use the box

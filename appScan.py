@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from User_Interface.Screens import scan_screen
+from AppScanAssets import scan_screen
 
 from datetime import datetime
 

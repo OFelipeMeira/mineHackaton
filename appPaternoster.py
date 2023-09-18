@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from User_Interface.Screens import paternoster_insert
+from AppPaternosterAssets import screen_insert
 
 from datetime import datetime
 
@@ -61,7 +61,7 @@ class Paternoster:
 
     def show_paternoster_screen(self):
         self.screen_state = "INSERT"
-        paternoster_insert.screen_paternoster(self)
+        screen_insert.frame(self)
 
 
     def key_pressed(self, key):
@@ -84,13 +84,6 @@ class Paternoster:
         #reseting sel.text after 4 carachteres
         if len(self.text) > 4:
             self.text = ""
-
-    # async def search_box(self, box_code):
-    #     await connector.connect()
-    #     box = await connector.get_box(box_code)
-    #     print(type(box))
-    #     print('-'*30)
-    #     return box
 
     async def get_box(self, serial):
         box = await connector.get_box(box_serial_number=serial)

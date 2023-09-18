@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError
 from Database import connector
-from User_Interface.Screens import scan_screen
+from AppCleanAssets import clear_screen 
 
 _MISSING_DATABASE = "Database not connected"
 _DATABASE_CONNECTION_ERROR = "Database connection error"
@@ -73,7 +73,7 @@ class Screen:
     def set_clean_screen(self):
         self.screen_state = "clean"
         self.reset_text_variables()
-        scan_screen.screen_scan(self)
+        clear_screen.frame(self)
 
     def execute_async_method(self, task):
         asyncio.get_event_loop().run_until_complete(task)
@@ -100,7 +100,7 @@ class Screen:
                      self.error_screen(_UNKNOWN_BOX_ERROR, _BOX_DOES_NOT_EXIST)
                 except DBConnectionError:
                     self.error_screen(_DATABASE_CONNECTION_ERROR, _MISSING_DATABASE)
-                scan_screen.screen_scan(self)
+                clear_screen.frame(self)
                 self.text = ""
             if len(self.text) > 4:
                 self.text = ""
