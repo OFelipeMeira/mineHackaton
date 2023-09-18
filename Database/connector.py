@@ -38,9 +38,10 @@ class Paternoster(Model):
     pat_id = fields.IntField(pk=True)
     pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
     pat_pos = fields.ForeignKeyField('models.PaternosterPositions', related_name="pat_positions")
-    insert_date = fields.CharField(19)
-    removed_date = fields.CharField(19, default="")
-    
+    #insert_date = fields.CharField(19)
+    #removed_date = fields.CharField(19, default="")
+    insert_date = fields.DatetimeField()
+    removed_date = fields.DatetimeField(null=True)
     def __str__(self):
         return self.pat_id
 
@@ -55,8 +56,7 @@ class Testes(Model):
     date1 = fields.DatetimeField()
     date2 = fields.DatetimeField(null=True)
 
-"""
-    SETUP
+""" SETUP
         init
         connect
 """
@@ -77,8 +77,7 @@ async def connect():
     )
 
 
-"""
-    Boxes
+""" Boxes
         create_box
         alter_box
         use_box
@@ -133,8 +132,7 @@ async def get_box(box_serial_number: str):
     return box
 
 
-"""
-    Types
+""" Types
         create_type
         get_type
         get_types
@@ -185,25 +183,23 @@ async def alter_box(box_type_name: str, box_type_name_new: str, new_period: int,
     await box_type.save()
     return box_type
 
-"""
-    Paternoster
+""" Paternoster
         insert_paternoster
         remove_paternoster
 """
-
 async def insert_paternoster(serial_number: str):
     """ Method used to insert new Boxes into Paternoster
 
     :param: box_serial_number :str - Code readed from QRCode in the box
     :return: True - if nothing goes wrong
     """
-    insert_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
     box = await Boxes.get(serial_number=serial_number)
+
     pos = await get_first_usable_pos()
     pos.in_use = True
     await pos.save()
-    await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, pat_pos=pos)
+
+    await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
     return True
 
 async def remove_paternoster_box(box_serial_number: str):
@@ -218,11 +214,7 @@ async def remove_paternoster_box(box_serial_number: str):
     box = await Boxes.get(serial_number=box_serial_number)
     box_pat = await Paternoster.get(pat_box_id=box.box_id, removed_date="")
 
-    # getting the inserted date
     insert_data = box_pat.insert_date
-    
-    # Converting string from the DB to date object:
-    insert_data = datetime.strptime(insert_data, '%Y-%m-%d %H:%M:%S')
 
     delta_time = datetime.now() - insert_data
 
@@ -256,8 +248,7 @@ async def verify_box_paternoster(box_serial_number:str):
         return True
 
 
-"""
-    PaternosterPosition
+""" PaternosterPosition
         create_paternoster_position
         delete_paternsoter_position
         get_first_usable_pos
@@ -285,12 +276,12 @@ async def get_first_usable_pos():
     pos = await PaternosterPositions.filter(in_use=False)
     return pos[0]
 
-""" TESTES
-"""
-async def get_inserted_date(id):
-    a = await Testes.get(id=id, date2=None)
-    return a
+# """ TESTES
+# """
+# async def get_inserted_date(id):
+#     a = await Testes.get(id=id, date2=None)
+#     return a
 
-async def insert_teste(date):
-    await Testes.create(date1=date)
+# async def insert_teste(date):
+#     await Testes.create(date1=date)
 
