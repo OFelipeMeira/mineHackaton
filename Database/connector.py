@@ -1,6 +1,6 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 """
@@ -149,20 +149,38 @@ async def insert_paternoster(serial_number: str):
     await pos.save()
     await Paternoster.create(pat_box_id=box.box_id, insert_date=insert_date, pat_pos=pos)
 
-async def remove_paternoster_box(box_serial_number: str):    
+async def remove_paternoster_box(box_serial_number: str):
+    """
+    :param: code of the box
+    :return: if the box can be removed, return False, else return none
+    """
     box = await Boxes.get(serial_number=box_serial_number)
+
     box_pat = await Paternoster.get(pat_box_id=box.box_id, removed_date="")
-    #print(box_pat.pat_pos_id)
-    pat_pos = await PaternosterPositions.get(pos_id=box_pat.pat_pos_id)
 
-    pat_pos.in_use = False
-    await pat_pos.save()
+    # getting the inserted date
+    insert_data = box_pat.insert_date
+    
+    # Converting string from the DB to date object:
+    insert_data = datetime.strptime(insert_data, '%Y-%m-%d %H:%M:%S')
+    if (datetime.now()- insert_data) <= 1:
+        pat_pos = await PaternosterPositions.get(pos_id=box_pat.pat_pos_id)
 
-    box_pat.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    await box_pat.save()
+        pat_pos.in_use = False
+        await pat_pos.save()
+
+        box_pat.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        await box_pat.save()
+    
+    else:
+        return None
     
 async def verify_box_paternoster(box_serial_number:str):
-    box = await Boxes.get(serial_number=box_serial_number)
+    """
+    Method used to verify if a box is already is on Paternoster
+    """
+
+    box = await Boxes.get_or_none(serial_number=box_serial_number)
     pat = await Paternoster.get_or_none(pat_box_id=box.box_id)
     if pat:
         return False
