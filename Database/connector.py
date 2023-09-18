@@ -50,6 +50,10 @@ class PaternosterPositions(Model):
     pos_name = fields.CharField(10)
     in_use = fields.BooleanField(default=False)
 
+class Testes(Model):
+    id = fields.IntField(pk=True)
+    date1 = fields.DatetimeField()
+    date2 = fields.DatetimeField(null=True)
 
 """
     SETUP
@@ -280,4 +284,13 @@ async def get_first_usable_pos():
     """
     pos = await PaternosterPositions.filter(in_use=False)
     return pos[0]
+
+""" TESTES
+"""
+async def get_inserted_date(id):
+    a = await Testes.get(id=id, date2=None)
+    return a
+
+async def insert_teste(date):
+    await Testes.create(date1=date)
 
