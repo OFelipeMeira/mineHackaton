@@ -96,7 +96,7 @@ async def teste():
     # print(b)
 
 if __name__ == '__main__':
-    #asyncio.run(create_data())
+    asyncio.run(create_data())
     #asyncio.run(Screen.Screen())
     
 #    print( asyncio.run(insert_paternoster("C123")) )
@@ -104,5 +104,5 @@ if __name__ == '__main__':
     # print( asyncio.run(get_first_usable_pos()) )
 
 
-    asyncio.run(teste())
+    #asyncio.run(teste())
     pass
