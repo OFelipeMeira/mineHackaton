@@ -99,21 +99,12 @@ async def remove_paternoster(box_name):
     await connector.connect()
     await connector.remove_paternoster_box(box_name)
 
-async def teste(txt):
-    await connector.connect()
-    a = await connector.get_box(txt)
-    print(a)
-
 if __name__ == '__main__':
 #    asyncio.run(create_data())
     #asyncio.run(Screen.Screen())
-
-    #asyncio.run(remove_paternoster("C123"))
-    #asyncio.run(set_unused())
     
-#    asyncio.run(insert_paternoster("C234"))
-    asyncio.run(remove_paternoster("C234"))
+#    print( asyncio.run(insert_paternoster("C123")) )
 
-    #asyncio.run(teste("C111"))
-
-
+#    print( asyncio.run(remove_paternoster('C123')) )
+    print( asyncio.run(get_first_usable_pos()) )
+    pass
