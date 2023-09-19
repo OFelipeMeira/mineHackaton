@@ -127,8 +127,8 @@ async def get_box(box_serial_number: str):
     :return: box:Boxes.object - Register with that serial number
     """
     box = await Boxes.get_or_none(serial_number=box_serial_number)
-    if box:
-        await box.fetch_related("box_type")
+    # if box:
+    #     await box.fetch_related("box_type")
     return box
 
 
@@ -240,8 +240,8 @@ async def verify_box_paternoster(box_serial_number:str):
     """
 
     box = await Boxes.get_or_none(serial_number=box_serial_number)
-    pat = await Paternoster.get_or_none(pat_box_id=box.box_id, removed_date="")
-    print(pat)
+    pat = await Paternoster.get_or_none(pat_box_id=box.box_id)
+
     if pat:
         return False
     else:
@@ -275,6 +275,11 @@ async def get_first_usable_pos():
     """
     pos = await PaternosterPositions.filter(in_use=False)
     return pos[0]
+
+async def get_pat_pos(pos_name):
+    pos = await PaternosterPositions.get_or_none(pos_name=pos_name)
+    return pos
+
 
 # """ TESTES
 # """

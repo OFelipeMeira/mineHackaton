@@ -1,0 +1,12 @@
+Paternoster:
+    28 rows
+    cada row cabem 7 caixas
+
+    codigos:
+     -P01
+     -P02
+       .
+       .
+       .
+     -P27
+     -P28

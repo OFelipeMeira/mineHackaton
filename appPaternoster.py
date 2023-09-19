@@ -5,6 +5,8 @@ from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
 from AppPaternosterAssets import screen_insert
 
+from time import sleep
+
 from datetime import datetime
 
 _MISSING_DATABASE = "Database not connected"
@@ -42,11 +44,11 @@ class Paternoster:
         self.box_types = []
         self.setup_variables = {
 
-            'paternosterBoxLabel': 'Código da caixa',
+            'paternosterBoxLabel': 'Codigo da Caixa',
             'paternosterBoxText': '-',
 
-            'paternosterRowLabel': 'Posição',
-            'paternosterRowText': '-',
+            'paternosterPosLabel': 'Posição',
+            'paternosterPosText': '-',
 
         }
 
@@ -60,34 +62,64 @@ class Paternoster:
 
 
     def show_paternoster_screen(self):
-        self.screen_state = "INSERT"
         screen_insert.frame(self)
-
+        
 
     def key_pressed(self, key):
         self.text += key.char
+        
+        #Letting allways the first letter to upper case
         if len(self.text) == 1:
             self.text = self.text[0].upper()
         print(self.text)
-        if len(self.text) == 4:
-            if self.screen_state == "INSERT":
-                a = self.get_box(self.text)
-                if a:
-                    print("achei a caixa")
-                print(type(a))
 
-                #self.show_paternoster_screen()
-                self.text = ""
+        match (self.screen_state):
+            case ("INSERT"):
 
-                        
 
-        #reseting sel.text after 4 carachteres
+                # reading row
+                if len(self.text) == 3:
+                    if self.get_pat_pos(self.text):
+                        pass
+                    
+                #reading box
+                if len(self.text) == 4:
+                    # READING THE BOX and showing position to insert: 
+                    if self.get_box(self.text):
+                        self.setup_variables['paternosterBoxText'] = self.text
+                        self.execute_async_method(self.show_first_pos())
+
+                        self.box_code = self.text
+
+                        self.text = ""
+
+                # ADDING:
+                if self.text == self.setup_variables['paternosterPosText'] and self.setup_variables['paternosterBoxText'] != "-":
+                    self.execute_async_method(self.insert_paternoster( box_name= self.setup_variables['paternosterBoxText'] ))
+                    self.setup_variables['paternosterBoxText'] = "-"
+                    self.setup_variables['paternosterPosText'] = "-"
+                    print("AADDED")
+                
+            case ("REMOVE"):
+                pass
+
+        self.show_paternoster_screen()
+        #reseting self.text after 4 carachteres
         if len(self.text) > 4:
             self.text = ""
+
+    async def show_first_pos(self):
+        await connector.connect()
+        first_pos = await connector.get_first_usable_pos()
+        self.setup_variables['paternosterPosText'] = first_pos.pos_name
 
     async def get_box(self, serial):
         box = await connector.get_box(box_serial_number=serial)
         return box
+    
+    async def get_pat_pos(self, pos_name):
+        pos = await connector.get_pat_pos(pos_name=pos_name)
+        return pos
     
     def execute_async_method(self, task):
         asyncio.get_event_loop().run_until_complete(task)
