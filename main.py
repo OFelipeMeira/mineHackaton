@@ -53,11 +53,6 @@ async def deletePosition(pos):
 
 async def test():
     await connector.connect()
-    print(await connector.create_paternoster_position("P1.1"))
-    print(await connector.create_paternoster_position("P1.2"))
-    print(await connector.create_paternoster_position("P1.3"))
-    print(await connector.create_paternoster_position("P1.4"))
-    print(await connector.create_paternoster_position("P1.5"))
 
 async def insert_paternoster(box_name):
     await connector.connect()
@@ -70,15 +65,17 @@ async def insert_paternoster(box_name):
 async def remove_paternoster(box_name):
     await connector.connect()
     await connector.remove_paternoster_box(box_name)
+    await connector.disconnect()
 
 if __name__ == '__main__':
     # asyncio.run(create_data())
     # asyncio.run(drop())
 
-    # print(asyncio.run( test() ))
+    print(asyncio.run( test() ))
     
-    print( asyncio.run(insert_paternoster("C111")) )
+    # print( asyncio.run(insert_paternoster("C123")) )
     # print( asyncio.run(insert_paternoster("C789")) )
 
 # ========== Vai ter que mudar ainda 
-#    print( asyncio.run(remove_paternoster('C123')) )
+    print( asyncio.run(remove_paternoster('C123')) )
+    # print( asyncio.run(remove_paternoster('C234')) )

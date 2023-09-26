@@ -1,6 +1,7 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
 from datetime import datetime
+import pytz
 
 
 """
@@ -221,16 +222,16 @@ async def remove_paternoster_box(box_serial_number: str):
     :return: if the box can be removed, return True, else return None
     """
     box = await Boxes.get(serial_number=box_serial_number)
-    box_pat = await Paternoster.get(pat_box_id=box.box_id, removed_date="")
+    box_pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
 
-    insert_data = box_pat.insert_date
+    now = datetime.now().replace(tzinfo=pytz.utc) #converting the Timezone
 
-    delta_time = datetime.now() - insert_data
+    delta_time = now - box_pat.insert_date
 
-    if delta_time.days <= 1:
+    if delta_time.days >= 1:
         pat_pos = await PaternosterPositions.get(pos_id=box_pat.pat_pos_id)
         pat_pos.in_use = False
-        box_pat.removed_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        box_pat.removed_date = datetime.now(tz=None)
         await pat_pos.save()
         await box_pat.save()
         return True
@@ -249,7 +250,7 @@ async def verify_box_paternoster(box_serial_number:str):
     """
 
     box = await Boxes.get_or_none(serial_number=box_serial_number)
-    pat = await Paternoster.get_or_none(pat_box_id=box.box_id)
+    pat = await Paternoster.get_or_none(pat_box_id=box.box_id, removed_date=None)
 
     if pat:
         return False
