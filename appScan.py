@@ -150,7 +150,6 @@ class Screen:
         if len(self.text) == 4:
             if self.text == self.setup_variables['scanNameText']:
                 coroutine = self.use_box()
-                print("A")
             else:
                 coroutine = self.get_data()
                 print("text:" + self.text)

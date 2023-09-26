@@ -76,12 +76,6 @@ class Paternoster:
         match (self.screen_state):
             case ("INSERT"):
 
-
-                # reading row
-                if len(self.text) == 3:
-                    if self.get_pat_pos(self.text):
-                        pass
-                    
                 #reading box
                 if len(self.text) == 4:
                     # READING THE BOX and showing position to insert: 

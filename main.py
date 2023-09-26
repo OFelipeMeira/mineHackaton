@@ -77,5 +77,5 @@ if __name__ == '__main__':
     # print( asyncio.run(insert_paternoster("C789")) )
 
 # ========== Vai ter que mudar ainda 
-    print( asyncio.run(remove_paternoster('C123')) )
+    # print( asyncio.run(remove_paternoster('C123')) )
     # print( asyncio.run(remove_paternoster('C234')) )
