@@ -38,8 +38,6 @@ class Paternoster(Model):
     pat_id = fields.IntField(pk=True)
     pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
     pat_pos = fields.ForeignKeyField('models.PaternosterPositions', related_name="pat_positions")
-    #insert_date = fields.CharField(19)
-    #removed_date = fields.CharField(19, default="")
     insert_date = fields.DatetimeField()
     removed_date = fields.DatetimeField(null=True)
     def __str__(self):
@@ -48,8 +46,10 @@ class Paternoster(Model):
 class PaternosterPositions(Model):
     """ Table to register all the positions of the Paternoster """
     pos_id = fields.IntField(pk=True)
-    pos_name = fields.CharField(10)
-    in_use = fields.BooleanField(default=False)
+    pos_name = fields.CharField(5)
+    uses = fields.IntField(default=0)
+    is_usable = fields.BooleanField(default=True)
+
 
 class Testes(Model):
     id = fields.IntField(pk=True)
@@ -75,6 +75,12 @@ async def connect():
         db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
         modules={'models' : ['Database.connector']},
     )
+
+async def disconnect():
+    await Tortoise.close_connections()
+
+async def drop_all():
+    await Tortoise._drop_databases()
 
 
 """ Boxes
@@ -196,7 +202,10 @@ async def insert_paternoster(serial_number: str):
     box = await Boxes.get(serial_number=serial_number)
 
     pos = await get_first_usable_pos()
-    pos.in_use = True
+
+    pos.uses = pos.uses + 1
+    if pos.uses >= 6:
+        pos.is_usable = False
     await pos.save()
 
     await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
@@ -247,6 +256,18 @@ async def verify_box_paternoster(box_serial_number:str):
     else:
         return True
 
+async def get_first_usable_pos():
+    """ Method used to return the first usable position from the Paternoster
+
+    :return: pos : PaternosterPosition register - First usable position
+    """
+    pos = await PaternosterPositions.get_or_none(is_usable=True).first()
+    return pos
+
+async def get_uses_pos():
+    pos = await get_first_usable_pos()
+    uses = await Paternoster.filter(pat_pos=pos)
+    return uses
 
 """ PaternosterPosition
         create_paternoster_position
@@ -267,14 +288,6 @@ async def delete_paternoster_position(pos_name:str):
     """
     pos_object = await PaternosterPositions.get(pos_name=pos_name)
     await pos_object.delete()
-
-async def get_first_usable_pos():
-    """ Method used to return the first usable position from the Paternoster
-
-    :return: pos : PaternosterPosition register - First usable position
-    """
-    pos = await PaternosterPositions.filter(in_use=False)
-    return pos[0]
 
 async def get_pat_pos(pos_name):
     pos = await PaternosterPositions.get_or_none(pos_name=pos_name)
