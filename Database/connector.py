@@ -225,23 +225,26 @@ async def remove_paternoster_box(box_serial_number: str):
     :return: if the box can be removed, return True, else return None
     """
     box = await Boxes.get(serial_number=box_serial_number)
-    box_pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
+    pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
 
     now = datetime.now().replace(tzinfo=pytz.utc) #converting the Timezone
 
-    delta_time = now - box_pat.insert_date
+    delta_time = now - pat.insert_date
 
     if delta_time.days >= 1:
-        pat_pos = await PaternosterPositions.get(pos_id=box_pat.pat_pos_id)
-        pat_pos.in_use = False
-        box_pat.removed_date = datetime.now(tz=None)
+        pat_pos = await PaternosterPositions.get(pos_id=pat.pat_pos)
+        if pat_pos.uses >= 6:
+            pat_pos.is_usable = False
+        else:
+            pat_pos.is_usable = True
+        pat.removed_date = datetime.now(tz=None)
         await pat_pos.save()
-        await box_pat.save()
+        await pat.save()
         return True
     else:
         return None
     
-async def verify_box_paternoster(box_serial_number:str):
+async def verify_paternoster(box_serial_number:str):
     """ Method used to verify if a box is already is on Paternoster
 
     If the box selected, is not in Paternoster, ou already had been taken off - retrun True
