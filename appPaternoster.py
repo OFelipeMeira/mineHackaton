@@ -40,8 +40,10 @@ class Paternoster:
         }
 
         # Setting up all the variables
-        self.type_data = []
-        self.box_types = []
+        self.data = {
+            'box_serial':'',
+            'insert_pos': ''
+        }
         self.setup_variables = {
 
             'paternosterBoxLabel': 'Codigo da Caixa',
@@ -76,23 +78,29 @@ class Paternoster:
         match (self.screen_state):
             case ("INSERT"):
 
-                #reading box
                 if len(self.text) == 4:
+                    
                     # READING THE BOX and showing position to insert: 
-                    if self.get_box(self.text):
-                        self.setup_variables['paternosterBoxText'] = self.text
-                        self.execute_async_method(self.show_first_pos())
+                    if self.text[0] == "C":
+                        try:
+                            self.sync_get_box_data(self.text)
+                            if self.data['box_serial'] == '': # if box not found
+                                print("no box found")
+                            else:                             # if box found
+                                self.setup_variables['paternosterBoxText'] = self.data['box_serial']
+                                self.execute_async_method(self.show_first_pos())
 
-                        self.box_code = self.text
+                        except:
+                            print("tudo errado")
+                                           
+                    if self.text == self.data['insert_pos']:
+                        self.sync_insert_paternoster( self.data['box_serial'] )
+                        self.setup_variables['paternosterBoxText'] = "-"
+                        self.setup_variables['paternosterPosText'] = "-"
+                        self.data['box_serial'] = ""
+                        print("AADDED")
 
-                        self.text = ""
-
-                # ADDING:
-                if self.text == self.setup_variables['paternosterPosText'] and self.setup_variables['paternosterBoxText'] != "-":
-                    self.execute_async_method(self.insert_paternoster( box_name= self.setup_variables['paternosterBoxText'] ))
-                    self.setup_variables['paternosterBoxText'] = "-"
-                    self.setup_variables['paternosterPosText'] = "-"
-                    print("AADDED")
+                    self.text = ""
                 
             case ("REMOVE"):
                 pass
@@ -106,12 +114,25 @@ class Paternoster:
         await connector.connect()
         first_pos = await connector.get_first_usable_pos()
         self.setup_variables['paternosterPosText'] = first_pos.pos_name
+        self.data['insert_pos'] = first_pos.pos_name
 
-    async def get_box(self, serial):
-        box = await connector.get_box(box_serial_number=serial)
-        return box
+    async def get_box_data(self, serial):
+        try:
+            await connector.connect()
+            box = await connector.get_box(box_serial_number=serial)
+
+            self.data['box_serial'] = box.serial_number
+        except:
+            return False
     
+    def sync_get_box_data(self, serial_number:str):
+        try:
+            return self.execute_async_method(self.get_box_data(serial_number))
+        except Exception as e :
+            print(e)
+            
     async def get_pat_pos(self, pos_name):
+        await connector.connect()
         pos = await connector.get_pat_pos(pos_name=pos_name)
         return pos
     
@@ -120,8 +141,19 @@ class Paternoster:
         return task
     
     async def insert_paternoster(self, box_name:str):
-        if await connector.verify_box_paternoster(box_name):
-            await connector.insert_paternoster(box_name)
+        await connector.connect()
+        await connector.insert_paternoster(box_name)
+    
+    def sync_insert_paternoster(self, box_name:str):
+        try:
+            return self.execute_async_method(self.insert_paternoster(box_name=box_name))
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     asyncio.run(Paternoster())
+
+    """ TO DO
+    remover tem que diminuir 1 na contagem de usos
+    verificar se a caixa ja está no paternoster antes de inseri-la
+    """

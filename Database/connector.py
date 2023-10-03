@@ -134,9 +134,10 @@ async def get_box(box_serial_number: str):
     :return: box:Boxes.object - Register with that serial number
     """
     box = await Boxes.get_or_none(serial_number=box_serial_number)
-    # if box:
-    #     await box.fetch_related("box_type")
-    return box
+    if box:
+        return box
+    else:
+        return None
 
 
 """ Types
@@ -207,6 +208,8 @@ async def insert_paternoster(serial_number: str):
     pos.uses = pos.uses + 1
     if pos.uses >= 6:
         pos.is_usable = False
+    else:
+        pos.is_usable = True
     await pos.save()
 
     await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
@@ -297,10 +300,4 @@ async def get_pat_pos(pos_name):
 
 # """ TESTES
 # """
-# async def get_inserted_date(id):
-#     a = await Testes.get(id=id, date2=None)
-#     return a
-
-# async def insert_teste(date):
-#     await Testes.create(date1=date)
 
