@@ -4,7 +4,7 @@ from time import sleep
 
 def frame(self):
 
-    self.screen_state = "INSERT"
+    self.screen_state = "REMOVE"
 
     # Main Frame to hide/show this screen
     self.screenMain = tk.Frame(self.window, bg=self.setup_styles['scanStatus'])
@@ -21,7 +21,7 @@ def frame(self):
 
     # Label for Name of box
     boxName = tk.Label(screenPat,
-                        text=f"{self.setup_variables['paternosterBoxLabel']}\n{self.setup_variables['paternosterBoxText']}",
+                        text=f"Finalmente to removendo",
                         bg=self.setup_styles['frame_bg'],
                         justify='center',
                         font=self.setup_styles['scanLabelFont'],
@@ -36,3 +36,4 @@ def frame(self):
                         font=self.setup_styles['scanLabelFont'],
                         )
     patRow.place(relx=0.5, rely=0.75, relheight=0.5, relwidth=1, anchor='center')
+    

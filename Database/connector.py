@@ -3,6 +3,7 @@ from tortoise import Tortoise, fields
 from datetime import datetime
 import pytz
 
+import asyncio
 
 """
     MODELS
@@ -50,12 +51,6 @@ class PaternosterPositions(Model):
     pos_name = fields.CharField(5)
     uses = fields.IntField(default=0)
     is_usable = fields.BooleanField(default=True)
-
-
-class Testes(Model):
-    id = fields.IntField(pk=True)
-    date1 = fields.DatetimeField()
-    date2 = fields.DatetimeField(null=True)
 
 """ SETUP
         init
@@ -215,7 +210,7 @@ async def insert_paternoster(serial_number: str):
     await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
     return True
 
-async def remove_paternoster_box(box_serial_number: str):
+async def remove_paternoster(box_serial_number: str):
     """ Method used to remove a box from the Paternoster
 
     The method checks if already been more than one day when the box was inserted.
@@ -237,6 +232,7 @@ async def remove_paternoster_box(box_serial_number: str):
             pat_pos.is_usable = False
         else:
             pat_pos.is_usable = True
+        pat_pos.uses = pat_pos.uses-1
         pat.removed_date = datetime.now(tz=None)
         await pat_pos.save()
         await pat.save()
@@ -269,6 +265,17 @@ async def get_first_usable_pos():
     :return: pos : PaternosterPosition register - First usable position
     """
     pos = await PaternosterPositions.get_or_none(is_usable=True).first()
+    return pos
+
+async def get_used_pos(box_name:str):
+    """ Method used to return the first usable position from the Paternoster
+
+    :return: pos : PaternosterPosition register - First usable position
+    """
+    box = await Boxes.get(serial_number=box_name).first()
+    pat = await Paternoster.get(pat_box_id=box.box_id)
+    pos = await PaternosterPositions.get(pos_id=pat.pat_pos_id)
+
     return pos
 
 async def get_uses_pos():
@@ -304,3 +311,4 @@ async def get_pat_pos(pos_name):
 # """ TESTES
 # """
 
+    

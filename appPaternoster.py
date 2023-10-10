@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from AppPaternosterAssets import screen_insert
+from AppPaternosterAssets import screen_insert, screen_remove
 
 from time import sleep
 
@@ -56,16 +56,20 @@ class Paternoster:
 
         self.window.bind("<Key>", self.key_pressed)
 
-        # calling the main screen and the scanning screen
-        self.show_paternoster_screen()
+        # calling the main screen and the inserting screen
+        # self.show_insert_screen()
+
+        self.show_remove_screen()
         
         # tkinter mainloop
         self.window.mainloop()
 
 
-    def show_paternoster_screen(self):
+    def show_insert_screen(self):
         screen_insert.frame(self)
-        
+    
+    def show_remove_screen(self):
+        screen_remove.frame(self)  
 
     def key_pressed(self, key):
         self.text += key.char
@@ -101,11 +105,23 @@ class Paternoster:
                         print("AADDED")
 
                     self.text = ""
+                self.show_insert_screen()
                 
             case ("REMOVE"):
-                pass
+                if len(self.text) == 4:
+                    if self.text[0] == "C":
+                        self.execute_async_method(self.show_used_pos(self.text))
+                    
+                    if self.text == self.data['insert_pos']:
+                        self.sync_remove_paternoster( self.data['box_serial'] )
+                        self.setup_variables['paternosterBoxText'] = "-"
+                        self.setup_variables['paternosterPosText'] = "-"
+                        self.data['box_serial'] = ""
+                        print("REMOVED")
 
-        self.show_paternoster_screen()
+                    self.text = ""
+                self.show_remove_screen()
+
         #reseting self.text after 4 carachteres
         if len(self.text) > 4:
             self.text = ""
@@ -113,6 +129,12 @@ class Paternoster:
     async def show_first_pos(self):
         await connector.connect()
         first_pos = await connector.get_first_usable_pos()
+        self.setup_variables['paternosterPosText'] = first_pos.pos_name
+        self.data['insert_pos'] = first_pos.pos_name
+
+    async def show_used_pos(self, box_name):
+        await connector.connect()
+        first_pos = await connector.get_used_pos(box_name)
         self.setup_variables['paternosterPosText'] = first_pos.pos_name
         self.data['insert_pos'] = first_pos.pos_name
 
@@ -149,6 +171,17 @@ class Paternoster:
             return self.execute_async_method(self.insert_paternoster(box_name=box_name))
         except Exception as e:
             print(e)
+
+    async def remove_paternoster(self, box_name:str):
+        await connector.connect()
+        await connector.remove_paternoster(box_name)
+
+    def sync_remove_paternoster(self, box_name:str):
+        try:
+            return self.execute_async_method(self.remove_paternoster(box_name=box_name))
+        except Exception as e:
+            print(e)
+
 
 if __name__ == "__main__":
     asyncio.run(Paternoster())
