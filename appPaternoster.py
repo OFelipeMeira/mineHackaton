@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from AppPaternosterAssets import screen_insert, screen_remove
+from AppPaternosterAssets import screen_insert, screen_remove, screen_menu
 
 from time import sleep
 
@@ -56,11 +56,13 @@ class Paternoster:
 
         self.window.bind("<Key>", self.key_pressed)
 
-        # calling the main screen and the inserting screen
+        # calling the inserting screen
         # self.show_insert_screen()
 
-        self.show_remove_screen()
-        
+        # calling the remove screen
+        # self.show_remove_screen()
+        self.show_menu_screen()
+      
         # tkinter mainloop
         self.window.mainloop()
 
@@ -70,6 +72,9 @@ class Paternoster:
     
     def show_remove_screen(self):
         screen_remove.frame(self)  
+
+    def show_menu_screen(self):
+        screen_menu.frame(self)  
 
     def key_pressed(self, key):
         self.text += key.char
@@ -109,7 +114,11 @@ class Paternoster:
                 
             case ("REMOVE"):
                 if len(self.text) == 4:
+
+                    # searching the position the box was inserted
                     if self.text[0] == "C":
+                        self.sync_get_box_data(self.text)
+                        self.setup_variables['paternosterBoxText'] = self.data['box_serial']
                         self.execute_async_method(self.show_used_pos(self.text))
                     
                     if self.text == self.data['insert_pos']:
@@ -117,7 +126,6 @@ class Paternoster:
                         self.setup_variables['paternosterBoxText'] = "-"
                         self.setup_variables['paternosterPosText'] = "-"
                         self.data['box_serial'] = ""
-                        print("REMOVED")
 
                     self.text = ""
                 self.show_remove_screen()
@@ -134,9 +142,9 @@ class Paternoster:
 
     async def show_used_pos(self, box_name):
         await connector.connect()
-        first_pos = await connector.get_used_pos(box_name)
-        self.setup_variables['paternosterPosText'] = first_pos.pos_name
-        self.data['insert_pos'] = first_pos.pos_name
+        used_pos = await connector.get_used_pos(box_name=box_name)      
+        self.setup_variables['paternosterPosText'] = used_pos.pos_name
+        self.data['insert_pos'] = used_pos.pos_name
 
     async def get_box_data(self, serial):
         try:
@@ -146,6 +154,7 @@ class Paternoster:
             self.data['box_serial'] = box.serial_number
         except:
             return False
+
     
     def sync_get_box_data(self, serial_number:str):
         try:
@@ -177,16 +186,15 @@ class Paternoster:
         await connector.remove_paternoster(box_name)
 
     def sync_remove_paternoster(self, box_name:str):
-        try:
-            return self.execute_async_method(self.remove_paternoster(box_name=box_name))
-        except Exception as e:
-            print(e)
+        # try:
+        return self.execute_async_method(self.remove_paternoster(box_name=box_name))
+        # except Exception as e:
+        #     print(e)
 
 
 if __name__ == "__main__":
     asyncio.run(Paternoster())
 
     """ TO DO
-    remover tem que diminuir 1 na contagem de usos
     verificar se a caixa ja está no paternoster antes de inseri-la
     """

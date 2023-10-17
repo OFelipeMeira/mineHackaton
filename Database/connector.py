@@ -1,6 +1,6 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 import asyncio
@@ -219,26 +219,36 @@ async def remove_paternoster(box_serial_number: str):
     :param: box_serial_number :str - Code readed from QRCode in the box
     :return: if the box can be removed, return True, else return None
     """
+    # Getting the register from the box selected
     box = await Boxes.get(serial_number=box_serial_number)
+
+    # Getting the register in the Paternoster table of the selected box
     pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
 
-    now = datetime.now().replace(tzinfo=pytz.utc) #converting the Timezone
+    # getting today with utc timezone
+    now = datetime.now().replace(tzinfo=pytz.utc)
 
+    # calculating if the box was added more than a day ago
     delta_time = now - pat.insert_date
 
     if delta_time.days >= 1:
-        pat_pos = await PaternosterPositions.get(pos_id=pat.pat_pos)
-        if pat_pos.uses >= 6:
-            pat_pos.is_usable = False
-        else:
-            pat_pos.is_usable = True
+        
+        # Getting the position of the box:
+        pat_pos = await PaternosterPositions.get(pos_id=pat.pat_pos_id)
+
+        # updating the usages in this row        
         pat_pos.uses = pat_pos.uses-1
+
+        # registering removed date
         pat.removed_date = datetime.now(tz=None)
+        
+        # saving
         await pat_pos.save()
         await pat.save()
-        return True
+
     else:
-        return None
+        print("This box was added  less than a day ago")
+
     
 async def verify_paternoster(box_serial_number:str):
     """ Method used to verify if a box is already is on Paternoster
@@ -268,14 +278,17 @@ async def get_first_usable_pos():
     return pos
 
 async def get_used_pos(box_name:str):
-    """ Method used to return the first usable position from the Paternoster
+    """ Method used to return used position of a specific box
 
-    :return: pos : PaternosterPosition register - First usable position
+    :return: pos : PaternosterPosition register - used position of a box
     """
     box = await Boxes.get(serial_number=box_name).first()
-    pat = await Paternoster.get(pat_box_id=box.box_id)
-    pos = await PaternosterPositions.get(pos_id=pat.pat_pos_id)
+    pat = await Paternoster.filter(pat_box_id=box.box_id)
 
+    for item in pat:
+        if item.removed_date == None:
+            break
+    pos = await PaternosterPositions.get(pos_id=item.pat_pos_id)
     return pos
 
 async def get_uses_pos():
@@ -311,4 +324,24 @@ async def get_pat_pos(pos_name):
 # """ TESTES
 # """
 
+async def insert_paternoster_fake(serial_number: str):
+    """ Method used to insert new Boxes into Paternoster
+
+    :param: box_serial_number :str - Code readed from QRCode in the box
+    :return: True - if nothing goes wrong
+    """
+    box = await Boxes.get(serial_number=serial_number)
+
+    pos = await get_first_usable_pos()
+
+    pos.uses = pos.uses + 1
+    if pos.uses >= 6:
+        pos.is_usable = False
+    else:
+        pos.is_usable = True
+    await pos.save()
+
+    today = datetime.now() - timedelta(days=1)
     
+    await Paternoster.create(pat_box_id=box.box_id, insert_date=today, pat_pos=pos)
+    return True

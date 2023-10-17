@@ -43,16 +43,9 @@ async def drop():
     await connector.drop_all()
 
 
-async def createPositon(pos):
-    await connector.connect()
-    await connector.create_paternoster_position(pos)
-
 async def deletePosition(pos):
     await connector.connect()
     await connector.delete_paternoster_position(pos)
-
-async def test():
-    await connector.connect()
 
 async def insert_paternoster(box_name):
     await connector.connect()
@@ -68,10 +61,10 @@ async def remove_paternoster(box_name):
     await connector.disconnect()
 
 if __name__ == '__main__':
-    # asyncio.run(create_data())
+    asyncio.run(create_data())
     # asyncio.run(drop())
 
-    print(asyncio.run( test() ))
+    # print(asyncio.run( test() ))
     
     # print( asyncio.run(insert_paternoster("C123")) )
     # print( asyncio.run(insert_paternoster("C789")) )
