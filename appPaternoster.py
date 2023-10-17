@@ -197,4 +197,6 @@ if __name__ == "__main__":
 
     """ TO DO
     verificar se a caixa ja está no paternoster antes de inseri-la
+    erros - documentação tortoise mostra quais exceptions cada codigo pode gerar
+    pandas - não aceita com timezones, tem que tirar
     """

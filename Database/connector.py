@@ -189,6 +189,7 @@ async def alter_box(box_type_name: str, box_type_name_new: str, new_period: int,
 """ Paternoster
         insert_paternoster
         remove_paternoster
+        get_paternoster_all
 """
 async def insert_paternoster(serial_number: str):
     """ Method used to insert new Boxes into Paternoster
@@ -249,6 +250,8 @@ async def remove_paternoster(box_serial_number: str):
     else:
         print("This box was added  less than a day ago")
 
+async def get_paternoster_all():
+    return await Paternoster.all().values()
     
 async def verify_paternoster(box_serial_number:str):
     """ Method used to verify if a box is already is on Paternoster
