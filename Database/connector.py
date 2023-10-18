@@ -61,7 +61,7 @@ class Testes(Model):
         connect
 """
 async def init():
-    """ Method to create and setup the models from the sqlite3 database and generate schemas"""
+    """ Method to create and setup the models from the mySql database and generate schemas"""
     await Tortoise.init(
         db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
         modules={'models' : ['Database.connector']},
