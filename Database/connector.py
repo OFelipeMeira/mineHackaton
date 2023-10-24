@@ -248,7 +248,7 @@ async def remove_paternoster(box_serial_number: str):
         await pat.save()
 
     else:
-        print("This box was added  less than a day ago")
+        raise Exception("Menos de 1 dia no armario")
 
 async def get_paternoster_all():
     return await Paternoster.all().values()
@@ -299,6 +299,7 @@ async def get_uses_pos():
     uses = await Paternoster.filter(pat_pos=pos)
     return uses
 
+
 """ PaternosterPosition
         create_paternoster_position
         delete_paternsoter_position
@@ -322,29 +323,3 @@ async def delete_paternoster_position(pos_name:str):
 async def get_pat_pos(pos_name):
     pos = await PaternosterPositions.get_or_none(pos_name=pos_name)
     return pos
-
-
-# """ TESTES
-# """
-
-async def insert_paternoster_fake(serial_number: str):
-    """ Method used to insert new Boxes into Paternoster
-
-    :param: box_serial_number :str - Code readed from QRCode in the box
-    :return: True - if nothing goes wrong
-    """
-    box = await Boxes.get(serial_number=serial_number)
-
-    pos = await get_first_usable_pos()
-
-    pos.uses = pos.uses + 1
-    if pos.uses >= 6:
-        pos.is_usable = False
-    else:
-        pos.is_usable = True
-    await pos.save()
-
-    today = datetime.now() - timedelta(days=1)
-    
-    await Paternoster.create(pat_box_id=box.box_id, insert_date=today, pat_pos=pos)
-    return True

@@ -42,7 +42,8 @@ class Paternoster:
         # Setting up all the variables
         self.data = {
             'box_serial':'',
-            'insert_pos': ''
+            'insert_pos': '',
+            'box_insertable': False
         }
         self.setup_variables = {
 
@@ -56,11 +57,6 @@ class Paternoster:
 
         self.window.bind("<Key>", self.key_pressed)
 
-        # calling the inserting screen
-        # self.show_insert_screen()
-
-        # calling the remove screen
-        # self.show_remove_screen()
         self.show_menu_screen()
       
         # tkinter mainloop
@@ -88,26 +84,29 @@ class Paternoster:
             case ("INSERT"):
 
                 if len(self.text) == 4:
-                    
                     # READING THE BOX and showing position to insert: 
                     if self.text[0] == "C":
                         try:
                             self.sync_get_box_data(self.text)
                             if self.data['box_serial'] == '': # if box not found
-                                print("no box found")
+                                raise Exception("Caixa não registrada")
                             else:                             # if box found
-                                self.setup_variables['paternosterBoxText'] = self.data['box_serial']
-                                self.execute_async_method(self.show_first_pos())
+                                self.execute_async_method(self.verify_paternoster(self.text))
+                                if self.data['box_insertable']:
+                                    self.setup_variables['paternosterBoxText'] = self.data['box_serial']
+                                    self.execute_async_method(self.show_first_pos())
+                                else:
+                                    raise Exception("Caixa já inserida")
 
-                        except:
-                            print("tudo errado")
+                        except Exception as e:
+                            messagebox.showerror(title="Erro na inserção", message=e)
                                            
                     if self.text == self.data['insert_pos']:
                         self.sync_insert_paternoster( self.data['box_serial'] )
+
                         self.setup_variables['paternosterBoxText'] = "-"
                         self.setup_variables['paternosterPosText'] = "-"
                         self.data['box_serial'] = ""
-                        print("AADDED")
 
                     self.text = ""
                 self.show_insert_screen()
@@ -134,6 +133,10 @@ class Paternoster:
         if len(self.text) > 4:
             self.text = ""
 
+    async def verify_paternoster(self, serial_number):
+        await connector.connect()
+        self.data['box_insertable'] = await connector.verify_paternoster(serial_number)
+
     async def show_first_pos(self):
         await connector.connect()
         first_pos = await connector.get_first_usable_pos()
@@ -150,7 +153,6 @@ class Paternoster:
         try:
             await connector.connect()
             box = await connector.get_box(box_serial_number=serial)
-
             self.data['box_serial'] = box.serial_number
         except:
             return False
@@ -160,7 +162,7 @@ class Paternoster:
         try:
             return self.execute_async_method(self.get_box_data(serial_number))
         except Exception as e :
-            print(e)
+            messagebox.showerror(title="Erro na busca", message=e)
             
     async def get_pat_pos(self, pos_name):
         await connector.connect()
@@ -179,17 +181,18 @@ class Paternoster:
         try:
             return self.execute_async_method(self.insert_paternoster(box_name=box_name))
         except Exception as e:
-            print(e)
+            messagebox.showerror(title="Erro na inserção", message=e)
 
     async def remove_paternoster(self, box_name:str):
         await connector.connect()
-        await connector.remove_paternoster(box_name)
+        return await connector.remove_paternoster(box_name)
+
 
     def sync_remove_paternoster(self, box_name:str):
-        # try:
-        return self.execute_async_method(self.remove_paternoster(box_name=box_name))
-        # except Exception as e:
-        #     print(e)
+        try:
+            return self.execute_async_method(self.remove_paternoster(box_name=box_name))
+        except Exception as e:
+            messagebox.showerror(title="Erro na remoção", message=e)
 
 
 if __name__ == "__main__":

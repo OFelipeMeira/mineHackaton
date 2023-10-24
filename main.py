@@ -61,8 +61,8 @@ async def remove_paternoster(box_name):
     await connector.disconnect()
 
 if __name__ == '__main__':
-    asyncio.run(create_data())
     # asyncio.run(drop())
+    asyncio.run(create_data())
 
     # print(asyncio.run( test() ))
     

@@ -19,7 +19,11 @@ def frame(self):
     quitBtn.place(relx=0.9, rely=0.1 , relheight=0.05, relwidth=0.05, anchor='center')
     quitBtn.config(command=quit)
     
-    backBtn = tk.Button(self.window, bg='yellow', text="<", font=self.setup_styles['btn_font'])
+    backBtn = tk.Button(self.window,
+                        bg=self.setup_styles['btn_color'],
+                        text="<",
+                        foreground=self.setup_styles['btn_fg'],
+                        font=self.setup_styles['btn_font'])
     backBtn.place(relx=0.1, rely=0.1 , relheight=0.05, relwidth=0.05, anchor='center')
     backBtn.config(command=self.show_menu_screen)
 
