@@ -128,11 +128,10 @@ async def get_box(box_serial_number: str):
     :param: box_serial_number:str - Name of the box to select
     :return: box:Boxes.object - Register with that serial number
     """
-    box = await Boxes.get_or_none(serial_number=box_serial_number)
-    if box:
-        return box
-    else:
-        return None
+    try:
+        return await Boxes.get(serial_number=box_serial_number)
+    except:
+        raise Exception("Caixa não encontrada")
 
 
 """ Types
@@ -190,6 +189,7 @@ async def alter_box(box_type_name: str, box_type_name_new: str, new_period: int,
         insert_paternoster
         remove_paternoster
         get_paternoster_all
+        verify_paternoster
 """
 async def insert_paternoster(serial_number: str):
     """ Method used to insert new Boxes into Paternoster
@@ -197,19 +197,22 @@ async def insert_paternoster(serial_number: str):
     :param: box_serial_number :str - Code readed from QRCode in the box
     :return: True - if nothing goes wrong
     """
+    print("SERIAL NUMBER:"+serial_number)
     box = await Boxes.get(serial_number=serial_number)
 
     pos = await get_first_usable_pos()
 
-    pos.uses = pos.uses + 1
-    if pos.uses >= 6:
-        pos.is_usable = False
-    else:
-        pos.is_usable = True
-    await pos.save()
+    if await verify_paternoster(serial_number):
+        pos.uses = pos.uses + 1
+        if pos.uses >= 6:
+            pos.is_usable = False
+        else:
+            pos.is_usable = True
+        await pos.save()
 
-    await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
-    return True
+        await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
+    else:
+        raise Exception("Caixa ja inserida")
 
 async def remove_paternoster(box_serial_number: str):
     """ Method used to remove a box from the Paternoster
@@ -221,6 +224,7 @@ async def remove_paternoster(box_serial_number: str):
     :return: if the box can be removed, return True, else return None
     """
     # Getting the register from the box selected
+    print("Ta chegando -"+box_serial_number+"- aqui")
     box = await Boxes.get(serial_number=box_serial_number)
 
     # Getting the register in the Paternoster table of the selected box

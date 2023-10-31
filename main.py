@@ -49,15 +49,12 @@ async def deletePosition(pos):
 
 async def insert_paternoster(box_name):
     await connector.connect()
-    if await connector.verify_box_paternoster(box_name):
-        await connector.insert_paternoster(box_name)
-    else:
-        print("deu erro")
+    await connector.insert_paternoster(box_name)
     await connector.disconnect()
 
 async def remove_paternoster(box_name):
     await connector.connect()
-    await connector.remove_paternoster_box(box_name)
+    await connector.remove_paternoster(box_name)
     await connector.disconnect()
 
 if __name__ == '__main__':
@@ -68,3 +65,7 @@ if __name__ == '__main__':
     
     # print( asyncio.run(insert_paternoster("C123")) )
     # print( asyncio.run(insert_paternoster("C789")) )
+    # try:
+    #     asyncio.run(remove_paternoster("C123"))
+    # except Exception as e:
+    #     print(e)

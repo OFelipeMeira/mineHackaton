@@ -13,8 +13,14 @@ _MISSING_DATABASE = "Database not connected"
 _DATABASE_CONNECTION_ERROR = "Database connection error"
 _UNKNOWN_BOX_ERROR = "Unkown box error"
 _BOX_DOES_NOT_EXIST = "This box does not exist in the database"
-_SEARCH_ERROR = "Box searching error"
 _NO_BOX_SEARCHED = 'No box searched'
+
+_INSERT_ERROR = "Erro na inserção"
+_REMOVE_ERROR = "Erro na remoção"
+_SEARCH_ERROR = "Erro na busca"
+_CODE_NOT_FOUNDED = "Codigo não registrado"
+
+_WRONG_POSITION = "Prateleira Incorreta"
 
 class Paternoster:
     def __init__(self):
@@ -40,12 +46,6 @@ class Paternoster:
         }
 
         # Setting up all the variables
-        self.data = {
-            'box_serial':'',
-            'insert_pos': '',
-            'box_insertable': False,
-            'is_box': False
-        }
         self.setup_variables = {
 
             'paternosterBoxLabel': 'Codigo da Caixa',
@@ -85,97 +85,94 @@ class Paternoster:
             case ("INSERT"):
 
                 if len(self.text) == 4:
-                    # verifying if the readed code is a box: 
-                    if self.sync_is_box(self.text):
+                    # verifying if the readed code:
+                    # if is a box:
+                    if self.text[0] == "C":
                         try:
                             self.sync_get_box_data(self.text)
                         except Exception as e:
-                            print("LINHA 102")
-                            print(e)
-                            # messagebox.showerror(title="Erro na inserção", message=e)
-                                           
-                    elif self.text == self.data['insert_pos']:
+                            messagebox.showerror(title=_INSERT_ERROR, message=e)
+
+                    # if is the paternoster position to insert
+                    elif self.text == self.setup_variables['paternosterPosText']:
                         # verifying if the readed code is a positions on paternoster - insert
-                        self.sync_insert_paternoster( self.data['box_serial'] )
+                        try:
+                            self.sync_insert_paternoster( self.setup_variables['paternosterBoxText'] )
+                            self.reset_variables()
+                        except Exception as e:
+                            messagebox.showerror(title=_INSERT_ERROR, message=e)
 
-                        self.setup_variables['paternosterBoxText'] = "-"
-                        self.setup_variables['paternosterPosText'] = "-"
-                        self.data['box_serial'] = ""
+                    # if is a wrong paternoster position                                        
+                    elif self.text[0] == "P" :
+                        messagebox.showerror(title=_INSERT_ERROR, message=_WRONG_POSITION)
 
+                    # or if is none of the above
                     else:
-                        messagebox.showerror("Erro na busca", "codigo não encontrado")                       
+                        messagebox.showerror(title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED)                       
                     self.show_insert_screen()
                     self.text = ""
                 
             case ("REMOVE"):
                 if len(self.text) == 4:
-
-                    # searching the position the box was inserted
+                    # Verifying the readed code :
+                    # If is a box:
                     if self.text[0] == "C":
-                        self.sync_get_box_data(self.text)
-                        self.setup_variables['paternosterBoxText'] = self.data['box_serial']
-                        self.execute_async_method(self.show_used_pos(self.text))
+                        try:
+                            self.sync_get_box_data(self.text)
+                            self.execute_async_method(self.show_used_pos(self.text))
+                        except Exception as e:
+                            messagebox.showerror(_SEARCH_ERROR, e) 
                     
-                    if self.text == self.data['insert_pos']:
-                        self.sync_remove_paternoster( self.data['box_serial'] )
-                        self.setup_variables['paternosterBoxText'] = "-"
-                        self.setup_variables['paternosterPosText'] = "-"
-                        self.data['box_serial'] = ""
+                    # If is the paternoster postion is getting removed
+                    elif self.text == self.setup_variables['paternosterPosText']:
+                        try:
+                            self.sync_remove_paternoster( self.setup_variables['paternosterBoxText'] )
+                            self.reset_variables(self)
+                        except Exception as e:
+                            messagebox.showerror(_REMOVE_ERROR, message=e)
 
+                    # If is a wrong paternoster position                                        
+                    elif self.text[0] == "P" :
+                        messagebox.showerror(_REMOVE_ERROR, message=_WRONG_POSITION)
+
+                    # Or if is none of the above
+                    else:                        
+                        messagebox.showerror(title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED)                       
+                    
                     self.text = ""
                 self.show_remove_screen()
 
-        #reseting self.text after 4 carachteres
-        # if len(self.text) > 4:
-        #     self.text = ""
+        # reseting self.text after 4 carachteres
+        if len(self.text) > 4:
+            self.text = ""
 
-    async def verify_paternoster(self, serial_number):
-        await connector.connect()
-        self.data['box_insertable'] = await connector.verify_paternoster(serial_number)
+    def reset_variables(self):
+        self.setup_variables['paternosterBoxText'] = "-"
+        self.setup_variables['paternosterPosText'] = "-"
 
     async def show_first_pos(self):
         await connector.connect()
         first_pos = await connector.get_first_usable_pos()
         self.setup_variables['paternosterPosText'] = first_pos.pos_name
-        self.data['insert_pos'] = first_pos.pos_name
 
     async def show_used_pos(self, box_name):
         await connector.connect()
-        used_pos = await connector.get_used_pos(box_name=box_name)      
-        self.setup_variables['paternosterPosText'] = used_pos.pos_name
-        self.data['insert_pos'] = used_pos.pos_name
+        used_pos = await connector.get_used_pos(box_name=box_name)   
+        if used_pos:
+            self.setup_variables['paternosterPosText'] = used_pos.pos_name
 
     async def get_box_data(self, serial):
         await connector.connect()
         box = await connector.get_box(box_serial_number=serial)
-        self.data['box_serial'] = box.serial_number
-        self.setup_variables['paternosterBoxText'] = box.serial_number
+        try:
+            self.setup_variables['paternosterBoxText'] = box.serial_number
+        except:
+            pass
         await self.show_first_pos()
 
     def sync_get_box_data(self, serial_number:str):
-        try:
-            self.execute_async_method(self.get_box_data(serial_number))
-        except Exception as e :
-            print("LINHA 171")
-            print(e)
-            self.text = ""
+        self.execute_async_method(self.get_box_data(serial_number))
 
-    async def is_box(self, serial_number):
-        await connector.connect()
-        if await connector.get_box(serial_number):
-            self.data['is_box'] = True
-        else:
-            self.data['is_box'] = False
-
-    def sync_is_box(self, serial_number):
-        self.execute_async_method(self.is_box(serial_number=serial_number))
-        return self.data['is_box']
-
-    async def get_pat_pos(self, pos_name):
-        await connector.connect()
-        pos = await connector.get_pat_pos(pos_name=pos_name)
-        return pos
-    
     def execute_async_method(self, task):
         asyncio.get_event_loop().run_until_complete(task)
         return task
@@ -185,27 +182,14 @@ class Paternoster:
         await connector.insert_paternoster(box_name)
     
     def sync_insert_paternoster(self, box_name:str):
-        try:
-            return self.execute_async_method(self.insert_paternoster(box_name=box_name))
-        except Exception as e:
-            print("LINHA 191")
-            # messagebox.showerror(title="Erro na inserção", message=e)
-            print(e)
-            self.text = ""
-
+        self.execute_async_method(self.insert_paternoster(box_name=box_name))
 
     async def remove_paternoster(self, box_name:str):
         await connector.connect()
-        return await connector.remove_paternoster(box_name)
+        await connector.remove_paternoster(box_name)
 
     def sync_remove_paternoster(self, box_name:str):
-        try:
-            return self.execute_async_method(self.remove_paternoster(box_name=box_name))
-        except Exception as e:
-            print("LINHA 202")
-            # messagebox.showerror(title="Erro na remoção", message=e)
-            print(e)
-            self.text = ""
+        self.execute_async_method(self.remove_paternoster(box_name=box_name))
 
 
 
@@ -213,6 +197,5 @@ if __name__ == "__main__":
     asyncio.run(Paternoster())
 
     """ TO DO
-    erros - documentação tortoise mostra quais exceptions cada codigo pode gerar
     ** pandas - não aceita com timezones, tem que tirar
     """
