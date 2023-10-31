@@ -197,7 +197,6 @@ async def insert_paternoster(serial_number: str):
     :param: box_serial_number :str - Code readed from QRCode in the box
     :return: True - if nothing goes wrong
     """
-    print("SERIAL NUMBER:"+serial_number)
     box = await Boxes.get(serial_number=serial_number)
 
     pos = await get_first_usable_pos()
@@ -224,7 +223,6 @@ async def remove_paternoster(box_serial_number: str):
     :return: if the box can be removed, return True, else return None
     """
     # Getting the register from the box selected
-    print("Ta chegando -"+box_serial_number+"- aqui")
     box = await Boxes.get(serial_number=box_serial_number)
 
     # Getting the register in the Paternoster table of the selected box
