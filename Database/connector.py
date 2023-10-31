@@ -325,3 +325,20 @@ async def delete_paternoster_position(pos_name:str):
 async def get_pat_pos(pos_name):
     pos = await PaternosterPositions.get_or_none(pos_name=pos_name)
     return pos
+
+async def export_data():
+    result = await Paternoster.raw("""
+                        SELECT * FROM paternoster
+                        inner join paternosterpositions
+                        on paternoster.pat_pos_id = paternosterpositions.pos_id
+                        INNER JOIN boxes
+                        ON boxes.box_id = paternoster.pat_box_id;""")
+    # pos_name, insert_date, removed_date, serial_number 
+    for res in result:
+        print("===== Item ======")
+        print("insert_date: "+str(res.insert_date))
+        print("removed_date: "+str(res.removed_date))
+        print("Box serial number: "+str(res.pat_box))
+        a = res.pat_box.box_id
+
+    

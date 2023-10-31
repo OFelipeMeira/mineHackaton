@@ -142,7 +142,7 @@ class Paternoster:
                     self.text = ""
                 self.show_remove_screen()
 
-        # reseting self.text after 4 carachteres
+        # Reseting self.text after 4 carachteres
         if len(self.text) > 4:
             self.text = ""
 
