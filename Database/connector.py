@@ -3,6 +3,8 @@ from tortoise import Tortoise, fields
 from datetime import datetime, timedelta
 import pytz
 
+from openpyxl import load_workbook
+import pandas as pd
 import asyncio
 
 """
@@ -51,6 +53,8 @@ class PaternosterPositions(Model):
     pos_name = fields.CharField(5)
     uses = fields.IntField(default=0)
     is_usable = fields.BooleanField(default=True)
+    def __str__(self) -> str:
+        return self.pos_name
 
 """ SETUP
         init
@@ -327,18 +331,64 @@ async def get_pat_pos(pos_name):
     return pos
 
 async def export_data():
-    result = await Paternoster.raw("""
-                        SELECT * FROM paternoster
-                        inner join paternosterpositions
-                        on paternoster.pat_pos_id = paternosterpositions.pos_id
-                        INNER JOIN boxes
-                        ON boxes.box_id = paternoster.pat_box_id;""")
-    # pos_name, insert_date, removed_date, serial_number 
-    for res in result:
-        print("===== Item ======")
-        print("insert_date: "+str(res.insert_date))
-        print("removed_date: "+str(res.removed_date))
-        print("Box serial number: "+str(res.pat_box))
-        a = res.pat_box.box_id
+    await export_paternoster()
+    await export_boxes()
 
-    
+async def export_paternoster():
+    try:
+        book = load_workbook('output.xlsx')
+        print("Achei")
+        print(book)
+    except FileNotFoundError:
+        pass
+    finally:
+        result = await Paternoster.all()
+        # pos_name, insert_date, removed_date, serial_number 
+        list = []
+
+        for res in result:
+            row = (await Boxes.get(box_id=res.pat_box_id), 
+                await PaternosterPositions.get(pos_id=res.pat_pos_id),
+                res.insert_date.replace(tzinfo=None),
+                "" if (res.removed_date == None) else res.removed_date.replace(tzinfo=None)
+                )
+            print(row)
+            list.append(row)
+            
+        df1 = pd.DataFrame(list)
+        df1.to_excel("output.xlsx",
+                    sheet_name="Paternoster",
+                    header=['Serial Number', 'Position', 'Inserted Date', 'Removed Date'],
+                    index=False
+                    )  
+
+async def export_boxes():
+    try:
+        file_name = 'output.xlsx'
+        book = load_workbook(file_name)
+        writer = pd.ExcelWriter(file_name, engine = 'openpyxl')
+        writer.book = book
+        
+    except FileNotFoundError:
+        pass
+    finally:
+        result = await Boxes.all()
+        # pos_name, insert_date, removed_date, serial_number 
+        list = []
+
+        for res in result:
+            row = (
+                res.box_id,
+                res.serial_number,
+                (await Types.get(type_id=res.box_type_id)).name,
+                res.last_cleand,
+                res.uses,
+            )
+            print(row)
+            list.append(res)
+            
+        df1 = pd.DataFrame(list)
+        df1.to_excel("output.xlsx",
+                        sheet_name="Boxes",
+                        index=False
+                    )  

@@ -9,7 +9,6 @@ async def create_data():
 
     await connector.init()
 
-
     print(await connector.create_Type("Box w/ small blister", 30, 15))
     print(await connector.create_Type("Box w/ big blister", 30, 15))
     print(await connector.create_Type("Box w/ small hive", 30, 15))
@@ -27,16 +26,11 @@ async def create_data():
     print(await connector.create_box(2, "C111", datetime.now()))
     print(await connector.create_box(3, "C222", datetime.now()))
 
-    print(await connector.create_paternoster_position("P1.1"))
-    print(await connector.create_paternoster_position("P1.2"))
-    print(await connector.create_paternoster_position("P1.3"))
-    print(await connector.create_paternoster_position("P1.4"))
-    print(await connector.create_paternoster_position("P1.5"))
-    print(await connector.create_paternoster_position("P2.1"))
-    print(await connector.create_paternoster_position("P2.2"))
-    print(await connector.create_paternoster_position("P2.3"))
-    print(await connector.create_paternoster_position("P2.4"))
-    print(await connector.create_paternoster_position("P2.5"))
+    for i in range(1,3,1):
+        for j in range(1,10,1):
+            await connector.create_paternoster_position(f"P{i}.{j}")
+            print(f"Position P{i}.{j} created")
+
 
 async def drop():
     await connector.connect()

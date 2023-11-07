@@ -5,6 +5,7 @@ from time import sleep
 def frame(self):
 
     self.screen_state = "REMOVE"
+    self.reset_variables()
 
     # Main Frame to hide/show this screen
     self.screenMain = tk.Frame(self.window, bg=self.setup_styles['scanStatus'])
