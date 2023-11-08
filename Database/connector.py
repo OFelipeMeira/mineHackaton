@@ -337,38 +337,37 @@ async def export_data():
 async def export_paternoster():
     try:
         book = load_workbook('output.xlsx')
-        print("Achei")
-        print(book)
-    except FileNotFoundError:
-        pass
     finally:
         result = await Paternoster.all()
         # pos_name, insert_date, removed_date, serial_number 
         list = []
 
-        for res in result:
-            row = (await Boxes.get(box_id=res.pat_box_id), 
-                await PaternosterPositions.get(pos_id=res.pat_pos_id),
-                res.insert_date.replace(tzinfo=None),
-                "" if (res.removed_date == None) else res.removed_date.replace(tzinfo=None)
-                )
-            print(row)
-            list.append(row)
-            
-        df1 = pd.DataFrame(list)
-        df1.to_excel("output.xlsx",
-                    sheet_name="Paternoster",
-                    header=['Serial Number', 'Position', 'Inserted Date', 'Removed Date'],
-                    index=False
-                    )  
+        if ( len(result) > 0 ):
+            for res in result:
+                row = (
+                    await Boxes.get(box_id=res.pat_box_id), 
+                    await PaternosterPositions.get(pos_id=res.pat_pos_id),
+                    res.insert_date.replace(tzinfo=None),
+                    "" if (res.removed_date == None) else res.removed_date.replace(tzinfo=None)
+                    )
+                print(row)
+                list.append(row)
+                
+            df1 = pd.DataFrame(list)
+            writer = pd.ExcelWriter('output.xlsx', engine = 'openpyxl')
+            writer.book = book
+            df1.to_excel(
+                        writer,
+                        sheet_name="Paternoster",
+                        header=['Serial Number', 'Position', 'Inserted Date', 'Removed Date'],
+                        index=False
+                        )
+        else:
+            print("\033[31m NO BOX INTO PATERNOSTER \033[0m")
 
 async def export_boxes():
     try:
-        file_name = 'output.xlsx'
-        book = load_workbook(file_name)
-        writer = pd.ExcelWriter(file_name, engine = 'openpyxl')
-        writer.book = book
-        
+        book = load_workbook('output.xlsx')
     except FileNotFoundError:
         pass
     finally:
@@ -387,8 +386,11 @@ async def export_boxes():
             print(row)
             list.append(res)
             
-        df1 = pd.DataFrame(list)
-        df1.to_excel("output.xlsx",
+            df1 = pd.DataFrame(list)
+            writer = pd.ExcelWriter('output.xlsx', engine = 'openpyxl')
+            writer.book = book
+            df1.to_excel(
+                        writer,
                         sheet_name="Boxes",
                         index=False
-                    )  
+                        )
