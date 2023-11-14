@@ -3,7 +3,7 @@ from tkinter import messagebox
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from AppPaternosterAssets import screen_insert, screen_remove, screen_menu
+from AppPaternosterAssets import screen_insert, screen_remove, screen_menu, screen_add_box
 
 from time import sleep
 
@@ -41,6 +41,8 @@ class Paternoster:
             'btn_close_color': '#731D24',   # Button close - color
 
             'entry_font': f'Arial, {self.screen_width*0.02:.0f}',       # Entry - Font
+            'entry_bg': 'red',
+            'entry_fg': 'yellow',
 
             'scanStatus': '#D8D1CB'
         }
@@ -54,9 +56,18 @@ class Paternoster:
             'paternosterPosLabel': 'Posição',
             'paternosterPosText': '-',
 
+            'addBoxTitle': 'Adicionar Caixa',
+            'addBoxLabelCode': 'Codigo:',
+            'addBoxLabelType': 'Tipo:',
+
+            'addBoxButton': 'Add',
+
+            'boxTypes': [],
         }
 
         self.window.bind("<Key>", self.key_pressed)
+
+        self.sync_get_types()
 
         self.show_menu_screen()
       
@@ -71,7 +82,11 @@ class Paternoster:
         screen_remove.frame(self)  
 
     def show_menu_screen(self):
-        screen_menu.frame(self)  
+        screen_menu.frame(self)
+
+
+    def show_insert_box_screen(self):
+        screen_add_box.frame(self)  
 
     def key_pressed(self, key):
         self.text += key.char
@@ -91,7 +106,13 @@ class Paternoster:
                         try:
                             self.sync_get_box_data(self.text)
                         except Exception as e:
-                            messagebox.showerror(title=_INSERT_ERROR, message=e)
+                            # messagebox.showerror(title=_INSERT_ERROR, message=e)
+                            response = messagebox.askyesno( title=_INSERT_ERROR, message="Gostaria de registrar nova caixa?")
+                            print("="*30)
+                            print(response)
+                            print("="*30)
+                            if response:
+                                self.show_insert_box_screen()               
 
                     # if is the paternoster position to insert
                     elif self.text == self.setup_variables['paternosterPosText']:
@@ -108,7 +129,7 @@ class Paternoster:
 
                     # or if is none of the above
                     else:
-                        messagebox.showerror(title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED)                       
+                        messagebox.showerror(title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED)       
                     self.show_insert_screen()
                     self.text = ""
                 
@@ -141,6 +162,9 @@ class Paternoster:
                     
                     self.text = ""
                 self.show_remove_screen()
+            
+            case ("ADDBOX"):
+                print("AAAAAAAAAAAAAAAAAa")
 
         # Reseting self.text after 4 carachteres
         if len(self.text) > 4:
@@ -169,6 +193,15 @@ class Paternoster:
         except:
             pass
         await self.show_first_pos()
+
+    async def get_types(self):
+        await connector.connect()
+        for i in await connector.get_types():
+            self.setup_variables['boxTypes'].append(i["name"])
+        return 0
+    
+    def sync_get_types(self):
+        self.execute_async_method(self.get_types())
 
     def sync_get_box_data(self, serial_number:str):
         self.execute_async_method(self.get_box_data(serial_number))

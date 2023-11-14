@@ -1,10 +1,11 @@
 from tortoise.models import Model
 from tortoise import Tortoise, fields
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 import pytz
 
 from openpyxl import load_workbook
 import pandas as pd
+import pandas.io.sql as pdSql
 import asyncio
 
 """
@@ -330,65 +331,37 @@ async def get_pat_pos(pos_name):
     pos = await PaternosterPositions.get_or_none(pos_name=pos_name)
     return pos
 
-async def export_data():
-    await export_paternoster()
-    await export_boxes()
+""" Export
+"""
 
 async def export_paternoster():
-    try:
-        book = load_workbook('output.xlsx')
-        print("Achei")
-        print(book)
-    except FileNotFoundError:
-        pass
-    finally:
-        result = await Paternoster.all()
-        # pos_name, insert_date, removed_date, serial_number 
-        list = []
-
-        for res in result:
-            row = (await Boxes.get(box_id=res.pat_box_id), 
-                await PaternosterPositions.get(pos_id=res.pat_pos_id),
-                res.insert_date.replace(tzinfo=None),
-                "" if (res.removed_date == None) else res.removed_date.replace(tzinfo=None)
-                )
-            print(row)
-            list.append(row)
-            
-        df1 = pd.DataFrame(list)
-        df1.to_excel("output.xlsx",
-                    sheet_name="Paternoster",
-                    header=['Serial Number', 'Position', 'Inserted Date', 'Removed Date'],
-                    index=False
-                    )  
-
-async def export_boxes():
-    try:
-        file_name = 'output.xlsx'
-        book = load_workbook(file_name)
-        writer = pd.ExcelWriter(file_name, engine = 'openpyxl')
-        writer.book = book
+    results = []
+    result = []
+    for row in await Paternoster.all():
+        result.append(row.pat_id)
+        result.append((await Boxes.get(box_id=row.pat_box_id)).serial_number)
+        result.append((await PaternosterPositions.get(pos_id=row.pat_pos_id)).pos_name)
+        result.append(row.insert_date.replace(tzinfo=None))
+        result.append(row.removed_date)
         
-    except FileNotFoundError:
-        pass
-    finally:
-        result = await Boxes.all()
-        # pos_name, insert_date, removed_date, serial_number 
-        list = []
+        results.append(result[:])
+        result.clear()
+    
+    col = ["ID", "Box", "Position ID", "Insert Date", "Removed Date"]
 
-        for res in result:
-            row = (
-                res.box_id,
-                res.serial_number,
-                (await Types.get(type_id=res.box_type_id)).name,
-                res.last_cleand,
-                res.uses,
-            )
-            print(row)
-            list.append(res)
-            
-        df1 = pd.DataFrame(list)
-        df1.to_excel("output.xlsx",
-                        sheet_name="Boxes",
-                        index=False
-                    )  
+    df = pd.DataFrame(results, columns=col)
+    df.to_excel('Export/Paternoster.xlsx', index=False)
+    df.to_csv('Export/Paternoster.csv', index=False)
+
+# """ Import
+# """
+
+# async def import_data():
+#     df = pd.read_excel('Export/Paternoster.xlsx')
+#     df = df.reset_index()  # make sure indexes pair with number of rows
+
+#     print(df.columns)
+
+#     for index, row in df.iterrows():
+#         print(row['ID'], row['Box'], row['Position ID'], row['Insert Date'], row['Removed Date'])
+        

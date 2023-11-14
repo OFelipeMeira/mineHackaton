@@ -51,9 +51,13 @@ async def remove_paternoster(box_name):
     await connector.remove_paternoster(box_name)
     await connector.disconnect()
 
-async def export():
+async def export_paternoster():
     await connector.connect()
-    await connector.export_data()
+    await connector.export_paternoster()
+
+# async def import_data():
+#     await connector.connect()
+#     await connector.import_data()
 
 if __name__ == '__main__':
     # asyncio.run(drop())
@@ -68,7 +72,8 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(e)
 
-    asyncio.run( export() )
+    # asyncio.run( export_paternoster() )
+    # asyncio.run( import_data() )
     """
     NEED TO EXPORT DATA - pandas
     """
