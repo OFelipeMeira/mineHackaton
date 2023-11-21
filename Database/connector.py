@@ -1,5 +1,5 @@
 from tortoise.models import Model
-from tortoise import Tortoise, fields
+from tortoise import Tortoise, fields, exceptions
 from datetime import datetime, timezone
 import pytz
 
@@ -17,10 +17,10 @@ import asyncio
 class Boxes(Model):
     """ Table to register all the boxes """
     box_id = fields.IntField(pk=True)
-    box_type = fields.ForeignKeyField('models.Types', related_name='types')
-    serial_number = fields.CharField(64, unique=True)
-    last_cleand = fields.DateField()
-    uses = fields.IntField()
+    box_type = fields.ForeignKeyField('models.Types', related_name='types', null=True)
+    serial_number = fields.CharField(max_length=64, unique=True)
+    last_cleand = fields.DateField(null=True)
+    uses = fields.IntField(null=True)
 
     def __str__(self):
         return self.serial_number
@@ -28,9 +28,9 @@ class Boxes(Model):
 class Types(Model):
     """ Table to register al the Types of boxes """    
     type_id = fields.IntField(pk=True)
-    name = fields.CharField(50, unique=True)
-    max_num_uses = fields.IntField()
-    cleaning_period = fields.IntField()
+    name = fields.CharField(max_length=50, unique=True)
+    max_num_uses = fields.IntField(null=True)
+    cleaning_period = fields.IntField(null=True)
 
     def __str__(self):
         return self.name
@@ -43,6 +43,7 @@ class Paternoster(Model):
     pat_id = fields.IntField(pk=True)
     pat_box = fields.ForeignKeyField('models.Boxes', related_name='boxes')
     pat_pos = fields.ForeignKeyField('models.PaternosterPositions', related_name="pat_positions")
+    pat_part_number = fields.ForeignKeyField('models.PartNumber', related_name='part_number')
     insert_date = fields.DatetimeField()
     removed_date = fields.DatetimeField(null=True)
     def __str__(self):
@@ -51,11 +52,18 @@ class Paternoster(Model):
 class PaternosterPositions(Model):
     """ Table to register all the positions of the Paternoster """
     pos_id = fields.IntField(pk=True)
-    pos_name = fields.CharField(5)
+    pos_name = fields.CharField(max_length=5, unique=True)
     uses = fields.IntField(default=0)
     is_usable = fields.BooleanField(default=True)
     def __str__(self) -> str:
         return self.pos_name
+    
+class PartNumber(Model):
+    pn_id = fields.IntField(pk=True)
+    number = fields.CharField(max_length=255, unique=True)
+
+    def __str__(self) -> str:
+        return self.number
 
 """ SETUP
         init
@@ -84,6 +92,17 @@ async def drop_all():
     await Tortoise._drop_databases()
 
 
+""" Part Number
+        create_part_number
+"""
+async def create_part_number(part_number:str):
+    """ Method used to create a new part number at PartNumber table
+    :param: part_number: str - part number
+    """
+    await PartNumber.create(number=part_number)
+
+
+
 """ Boxes
         create_box
         alter_box
@@ -91,7 +110,7 @@ async def drop_all():
         clean_box
         get_box
 """
-async def create_box(type_id: int, serial_number: str, last_cleand=datetime.now(), uses=0):
+async def create_box(serial_number: str, type_id: int=None, last_cleand=datetime.now(), uses=0):
     """ Method used to create a new box at Boxes table
     :param: type_id:int  - Id from the Type of the box
     :param: serial_number: str - Serial number wroted in the QRCode in the box
@@ -356,12 +375,49 @@ async def export_paternoster():
 # """ Import
 # """
 
-# async def import_data():
-#     df = pd.read_excel('Export/Paternoster.xlsx')
-#     df = df.reset_index()  # make sure indexes pair with number of rows
+async def import_data():
+    # df = pd.read_excel('Export/Paternoster.xlsx')
+    df = pd.read_excel('excel_to_read/Paternoster1.xls')
+    df = df.reset_index()  # make sure indexes pair with number of rows
 
-#     print(df.columns)
+    # print(df.columns)
 
-#     for index, row in df.iterrows():
-#         print(row['ID'], row['Box'], row['Position ID'], row['Insert Date'], row['Removed Date'])
+    # index - number of the line (starts at 0)
+    # row - columns of the dataframe
+    for index, row in df.iterrows():
+        # print(row['index'], row['Posição'], row['Nº da caixa'], row['Nº de tipo'], row['Hora de Entrada'])
+
+        part_number = row['Nº de tipo']
+        position = row['Posição']
+        box_serial_number = row['Nº da caixa']
+        paternoster_inserted_date = row['Hora de Entrada']
+
         
+
+        box = await Boxes.get_or_create(serial_number= box_serial_number)
+        pos = await PaternosterPositions.get_or_create(pos_name= position)
+        pn  = await PartNumber.get_or_create(number= part_number)
+
+        print("="*30)
+        if str(box[0]) == "nan":
+            print("caixa sem numero")
+            continue
+        elif str(pos[0]) == "nan":
+            print("posição vazia")
+            continue
+        elif str(pn[0]) == "nan":
+            print("part number vazio")
+            continue
+
+        print(box[0])
+        print(pos[0])
+        print(pn[0])
+        print(paternoster_inserted_date)
+
+        await Paternoster.create(
+                            pat_box=box[0],
+                            pat_pos=pos[0],
+                            pat_part_number=pn[0],
+                            insert_date=str(paternoster_inserted_date),
+                            removed_date=None
+                            )
