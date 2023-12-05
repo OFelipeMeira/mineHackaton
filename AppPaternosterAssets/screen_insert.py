@@ -5,7 +5,7 @@ from time import sleep
 def frame(self):
 
     self.screen_state = "INSERT"
-    self.reset_variables()
+    # self.reset_variables()
 
     # Main Frame to hide/show this screen
     self.screenMain = tk.Frame(self.window, bg=self.setup_styles['scanStatus'])
@@ -54,3 +54,10 @@ def frame(self):
                         font=self.setup_styles['scanLabelFont'],
                         )
     patRow.place(relx=0.5, rely=0.75, relheight=0.5, relwidth=1, anchor='center')
+
+    selected_option = tk.StringVar()
+    options = self.setup_variables['partNumbers']
+    dropdown = tk.OptionMenu(screenPat, selected_option, *options)
+    dropdown.place(relx=0.5, rely=0.5, relheight=0.5, relwidth=1, anchor='center')
+
+    return selected_option.get()

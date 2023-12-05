@@ -94,12 +94,16 @@ async def drop_all():
 
 """ Part Number
         create_part_number
+        get_part_numbers
 """
 async def create_part_number(part_number:str):
     """ Method used to create a new part number at PartNumber table
     :param: part_number: str - part number
     """
     await PartNumber.create(number=part_number)
+    
+async def get_part_numbers():
+    return await PartNumber.all().values()
 
 
 
@@ -186,6 +190,7 @@ async def get_types():
     """
     return await Types.all().values()
 
+
 async def alter_period(box_type_name: str, new_period: int, new_uses = 0):
     """ Method used to update the period of cleaning from a Type """
     return await alter_box(box_type_name, box_type_name, new_period, new_uses)
@@ -215,14 +220,14 @@ async def alter_box(box_type_name: str, box_type_name_new: str, new_period: int,
         get_paternoster_all
         verify_paternoster
 """
-async def insert_paternoster(serial_number: str):
+async def insert_paternoster(serial_number: str, part_number:str):
     """ Method used to insert new Boxes into Paternoster
 
     :param: box_serial_number :str - Code readed from QRCode in the box
     :return: True - if nothing goes wrong
     """
     box = await Boxes.get(serial_number=serial_number)
-
+    part = await PartNumber.get(number=part_number)
     pos = await get_first_usable_pos()
 
     if await verify_paternoster(serial_number):
@@ -233,7 +238,12 @@ async def insert_paternoster(serial_number: str):
             pos.is_usable = True
         await pos.save()
 
-        await Paternoster.create(pat_box_id=box.box_id, insert_date=datetime.now(tz=None), pat_pos=pos)
+        await Paternoster.create(
+                                 pat_box_id=box.box_id,
+                                 insert_date=datetime.now(tz=None),
+                                 pat_pos=pos,
+                                 pat_part_number_id=part
+                                 )
     else:
         raise Exception("Caixa ja inserida")
 

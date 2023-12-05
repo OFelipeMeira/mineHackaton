@@ -29,13 +29,14 @@ async def create_data():
     # print(await connector.create_box("C222", 3, datetime.now()))
 
     # Adding all part numbers
-    # for part_number in part_numbers_to_add:
-    #     await connector.create_part_number(f"{part_number}")
-    #     print(f"{part_number} Added")
+    for part_number in part_numbers_to_add:
+        await connector.create_part_number(f"{part_number}")
+        print(f"{part_number} Added")
 
     # Adding all Paternoster Positions
-    # for positions in paternoster_positions:
-    #     await connector.create_paternoster_position(pos_name=positions)
+    for positions in paternoster_positions:
+        await connector.create_paternoster_position(pos_name=positions)
+        print(f"Position {positions} Added")
 
 
 part_numbers_to_add = [
@@ -494,6 +495,7 @@ paternoster_positions = [
 async def drop():
     await connector.connect()
     await connector.drop_all()
+    print("database Droppped")
 
 
 async def deletePosition(pos):
@@ -532,7 +534,7 @@ if __name__ == '__main__':
     #     print(e)
 
     # asyncio.run( export_paternoster() )
-    asyncio.run( import_data() )
+    # asyncio.run( import_data() )
     """
     NEED TO EXPORT DATA - pandas
     """
