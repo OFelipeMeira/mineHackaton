@@ -5,6 +5,10 @@ import asyncio
 
 # pip install tortoise-orm[asyncmy] -- install Tortoise ORM SQL
 
+# to run needs to create User: 'MainUser' password: 'password'
+#                 create database 'object_db'
+# Note: this user must to have global privileges
+
 async def create_data():
 
     await connector.init()

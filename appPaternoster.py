@@ -4,7 +4,13 @@ import tkinter as tk
 import asyncio
 from tortoise.exceptions import DoesNotExist, DBConnectionError, IntegrityError
 from Database import connector
-from AppPaternosterAssets import screen_insert, screen_remove, screen_menu, screen_add_box
+from AppPaternosterAssets import (
+    screen_insert,
+    screen_remove,
+    screen_menu,
+    screen_add_box,
+    screen_select_part_number
+)
 
 from time import sleep
 
@@ -61,6 +67,8 @@ class Paternoster:
             'addBoxLabelCode': 'Codigo:',
             'addBoxLabelType': 'Tipo:',
 
+            'part_number': '',
+
             'addBoxButton': 'Add',
 
             'boxTypes': [],
@@ -72,14 +80,24 @@ class Paternoster:
         self.sync_get_types()
         self.sync_get_part_numbers()
 
-        self.show_menu_screen()
+        
+
+        # self.show_menu_screen()
+        self.show_select_part_number()
       
         # tkinter mainloop
         self.window.mainloop()
 
+    def select_pn(self, a):
+        self.setup_variables['part_number'] = self.table.item(self.table.focus())['values'][0]
+        print(type(self.setup_variables['part_number']))
+        self.show_insert_screen()
 
     def show_insert_screen(self):
         screen_insert.frame(self)
+
+    def show_select_part_number(self):
+        screen_select_part_number.frame(self)
     
     def show_remove_screen(self):
         screen_remove.frame(self)  
@@ -100,13 +118,14 @@ class Paternoster:
         print(self.text)
 
         match (self.screen_state):
-            case ("INSERT"):
+            case ("PARTNUMBER"):
+                pass
+                
 
+            case ("INSERT"):
 
                 # if reads a Box:
                 if self.text[0] == "C" and len(self.text) == 4:
-                    print("-"*30)
-                    print(screen_insert.frame(self))
                     try:
                         self.sync_get_box_data(self.text)
                         self.text = ""
@@ -114,13 +133,13 @@ class Paternoster:
                         self.show_insert_screen()
 
                     except Exception as e:
-                        # messagebox.showerror(title=_INSERT_ERROR, message=e)
-                        # response = messagebox.askyesno( title=_INSERT_ERROR, message="Gostaria de registrar nova caixa?")
+                        messagebox.showerror(title=_INSERT_ERROR, message=e)
+                        response = messagebox.askyesno( title=_INSERT_ERROR, message="Gostaria de registrar nova caixa?")
+                        print("BOX NOT FOUND"+"="*30)
+                        print(response)
                         print("="*30)
-                        # print(response)
-                        # print("="*30)
-                        # if response:
-                        #     self.show_insert_box_screen()      
+                        if response:
+                            self.show_insert_box_screen()      
 
                 # if reads a Position
                 elif self.text[0] == "P" :
@@ -129,15 +148,16 @@ class Paternoster:
                         try:
                             self.sync_insert_paternoster(
                                 box_name=self.setup_variables['paternosterBoxText'],
-                                # part_number=
-
+                                part_number=self.setup_variables['part_number']
                             )
                             self.reset_variables()
                             self.text = ""
                             print("reaload cause position was found")
+                            print("inserted")
                             self.show_insert_screen()
                         except Exception as e:
                             messagebox.showerror(title=_INSERT_ERROR, message=e)
+                            self.text = ""
                     elif len(self.text) == 5:
                         messagebox.showerror(title=_INSERT_ERROR, message=_WRONG_POSITION)
                         self.reset_variables()
@@ -145,43 +165,10 @@ class Paternoster:
                         print("reaload cause position NOT was found")
                         self.show_insert_screen()
 
+                if len(self.text) >= 5:
+                    messagebox.showerror(title="no code founded", message="Try again")
+                    self.text = ""
 
-                # if len(self.text) == 4:
-                #     # verifying if the readed code:
-                #     # if is a box:
-                #     if self.text[0] == "C":
-                #         try:
-                #             self.sync_get_box_data(self.text)
-                #         except Exception as e:
-                #             # messagebox.showerror(title=_INSERT_ERROR, message=e)
-                #             response = messagebox.askyesno( title=_INSERT_ERROR, message="Gostaria de registrar nova caixa?")
-                #             print("="*30)
-                #             print(response)
-                #             print("="*30)
-                #             if response:
-                #                 self.show_insert_box_screen()               
-
-                #     # if is the paternoster position to insert
-                #     elif self.text == self.setup_variables['paternosterPosText']:
-                #         # verifying if the readed code is a positions on paternoster - insert
-                #         try:
-                #             self.sync_insert_paternoster( self.setup_variables['paternosterBoxText'] )
-                #             self.reset_variables()
-                #         except Exception as e:
-                #             messagebox.showerror(title=_INSERT_ERROR, message=e)
-
-                #     # if is a wrong paternoster position                                        
-                #     elif self.text[0] == "P" :
-                #         messagebox.showerror(title=_INSERT_ERROR, message=_WRONG_POSITION)
-
-                #     # or if is none of the above
-                #     else:
-                #         messagebox.showerror(title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED)
-
-                #     print("REloado")
-                #     print(self.setup_variables['paternosterBoxText'])
-                #     self.show_insert_screen()
-                #     self.text = ""
                 
             case ("REMOVE"):
                 if len(self.text) == 4:
@@ -216,9 +203,9 @@ class Paternoster:
             case ("ADDBOX"):
                 print("AAAAAAAAAAAAAAAAAa")
 
-        # Reseting self.text after 4 carachteres
-        if len(self.text) > 4:
-            self.text = ""
+        # # Reseting self.text after 4 carachteres
+        # if len(self.text) > 4:
+        #     self.text = ""
 
     def reset_variables(self):
         self.setup_variables['paternosterBoxText'] = "-"

@@ -162,6 +162,18 @@ async def get_box(box_serial_number: str):
         raise Exception("Caixa não encontrada")
 
 
+async def get_box2(box_serial_number: str):
+    """ Method used to return a single box object
+
+    :param: box_serial_number:str - Name of the box to select
+    :return: box:Boxes.object - Register with that serial number
+    """
+    try:
+        return await Boxes.filter(serial_number=box_serial_number)
+    except:
+        raise Exception("Caixa não encontrada")
+
+
 """ Types
         create_type
         get_type
@@ -242,7 +254,7 @@ async def insert_paternoster(serial_number: str, part_number:str):
                                  pat_box_id=box.box_id,
                                  insert_date=datetime.now(tz=None),
                                  pat_pos=pos,
-                                 pat_part_number_id=part
+                                 pat_part_number=part
                                  )
     else:
         raise Exception("Caixa ja inserida")
