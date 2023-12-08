@@ -80,10 +80,9 @@ class Paternoster:
         self.sync_get_types()
         self.sync_get_part_numbers()
 
-        
 
-        # self.show_menu_screen()
-        self.show_select_part_number()
+        self.show_menu_screen()
+        # self.show_select_part_number()
       
         # tkinter mainloop
         self.window.mainloop()
@@ -105,9 +104,9 @@ class Paternoster:
     def show_menu_screen(self):
         screen_menu.frame(self)
 
-
     def show_insert_box_screen(self):
         screen_add_box.frame(self)  
+
 
     def key_pressed(self, key):
         self.text += key.char
@@ -134,12 +133,13 @@ class Paternoster:
 
                     except Exception as e:
                         messagebox.showerror(title=_INSERT_ERROR, message=e)
-                        response = messagebox.askyesno( title=_INSERT_ERROR, message="Gostaria de registrar nova caixa?")
-                        print("BOX NOT FOUND"+"="*30)
-                        print(response)
-                        print("="*30)
+                        response = messagebox.askyesno( title=_INSERT_ERROR, message=f"Gostaria de registrar a caixa {self.text}?")
                         if response:
-                            self.show_insert_box_screen()      
+                            print(self.text)
+                            self.sync_create_box(self.text)
+                            messagebox.showinfo(title=_INSERT_ERROR, message=f"Caixa {self.text} adicionada")
+                            print(f"BOX {self.text} ADDED")
+                            # self.show_insert_box_screen()      
 
                 # if reads a Position
                 elif self.text[0] == "P" :
@@ -200,12 +200,13 @@ class Paternoster:
                     self.text = ""
                 self.show_remove_screen()
             
-            case ("ADDBOX"):
-                print("AAAAAAAAAAAAAAAAAa")
-
         # # Reseting self.text after 4 carachteres
         # if len(self.text) > 4:
         #     self.text = ""
+
+    def execute_async_method(self, task):
+        asyncio.get_event_loop().run_until_complete(task)
+        return task
 
     def reset_variables(self):
         self.setup_variables['paternosterBoxText'] = "-"
@@ -250,10 +251,6 @@ class Paternoster:
     def sync_get_box_data(self, serial_number:str):
         self.execute_async_method(self.get_box_data(serial_number))
 
-    def execute_async_method(self, task):
-        asyncio.get_event_loop().run_until_complete(task)
-        return task
-    
     async def insert_paternoster(self, box_name:str, part_number:str):
         await connector.connect()
         await connector.insert_paternoster(box_name, part_number)
@@ -268,6 +265,12 @@ class Paternoster:
     def sync_remove_paternoster(self, box_name:str):
         self.execute_async_method(self.remove_paternoster(box_name=box_name))
 
+    async def create_box(self, box_name:str):
+        await connector.connect()
+        await connector.create_box(box_name)
+        
+    def sync_create_box(self, box_name:str):
+        self.execute_async_method(self.create_box(box_name=box_name))
 
 
 if __name__ == "__main__":

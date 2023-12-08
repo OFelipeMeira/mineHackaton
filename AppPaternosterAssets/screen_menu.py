@@ -30,7 +30,7 @@ def frame(self):
     # insert Button
     insertBtn = tk.Button(self.window, bg=self.setup_styles['btn_color'], text="Insert", font=self.setup_styles['btn_font'], fg=self.setup_styles['btn_fg'])
     insertBtn.place(relx=0.3, rely=0.7 , relheight=0.2, relwidth=0.2, anchor='center')
-    insertBtn.config(command=self.show_insert_screen)
+    insertBtn.config(command=self.show_select_part_number)
 
     # remove Button
     removeBtn = tk.Button(self.window, bg=self.setup_styles['btn_color'], text="Remove", font=self.setup_styles['btn_font'], fg=self.setup_styles['btn_fg'])

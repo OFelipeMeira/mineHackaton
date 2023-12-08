@@ -524,6 +524,10 @@ async def import_data():
     await connector.connect()
     await connector.import_data()
 
+async def create_box():
+    await connector.connect()
+    await connector.create_box("C987")
+
 if __name__ == '__main__':
     # asyncio.run(drop())
     # asyncio.run(create_data())
@@ -539,6 +543,7 @@ if __name__ == '__main__':
 
     # asyncio.run( export_paternoster() )
     # asyncio.run( import_data() )
+    # asyncio.run( create_box() )
     """
     NEED TO EXPORT DATA - pandas
     """

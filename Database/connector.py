@@ -72,7 +72,7 @@ class PartNumber(Model):
 async def init():
     """ Method to create and setup the models from the sqlite3 database and generate schemas"""
     await Tortoise.init(
-        db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
+        db_url="mysql://root:@127.0.0.1:3306/motronic",
         modules={'models' : ['Database.connector']},
     )
     # Generate the schema
@@ -81,7 +81,7 @@ async def init():
 async def connect():
     """ Default Tortoise method to connect the database """
     await Tortoise.init(
-        db_url="mysql://MainUser:password@127.0.0.1:3306/object_db",
+        db_url="mysql://root:@127.0.0.1:3306/motronic",
         modules={'models' : ['Database.connector']},
     )
 
@@ -114,7 +114,7 @@ async def get_part_numbers():
         clean_box
         get_box
 """
-async def create_box(serial_number: str, type_id: int=None, last_cleand=datetime.now(), uses=0):
+async def create_clean_box(serial_number: str, type_id: int=None, last_cleand=datetime.now(), uses=0):
     """ Method used to create a new box at Boxes table
     :param: type_id:int  - Id from the Type of the box
     :param: serial_number: str - Serial number wroted in the QRCode in the box
@@ -122,6 +122,16 @@ async def create_box(serial_number: str, type_id: int=None, last_cleand=datetime
     :param: uses:int  - How many times were used - default 0
     """
     box_type = await Types.get(type_id=type_id)
+    await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
+
+async def create_box(serial_number: str, type_id: int=None, last_cleand=None, uses=0):
+    """ Method used to create a new box at Boxes table
+    :param: type_id:int  - Id from the Type of the box
+    :param: serial_number: str - Serial number wroted in the QRCode in the box
+    :param: last_cleand: datetime.object - Now
+    :param: uses:int  - How many times were used - default 0
+    """
+    box_type = await Types.get_or_none(type_id=type_id)
     await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
 
 async def use_box(box_serial_number: str):
