@@ -524,9 +524,9 @@ async def import_data():
     await connector.connect()
     await connector.import_data()
 
-async def create_box():
+async def create_box(serial_number):
     await connector.connect()
-    await connector.create_box("C987")
+    await connector.create_box(serial_number=serial_number)
 
 if __name__ == '__main__':
     # asyncio.run(drop())
