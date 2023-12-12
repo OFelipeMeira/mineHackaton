@@ -114,7 +114,7 @@ async def get_part_numbers():
         clean_box
         get_box
 """
-async def create_clean_box(serial_number: str, type_id: int=None, last_cleand=datetime.now(), uses=0):
+async def create_box(serial_number: str, type_id: int=None, last_cleand=datetime.now(), uses=0):
     """ Method used to create a new box at Boxes table
     :param: type_id:int  - Id from the Type of the box
     :param: serial_number: str - Serial number wroted in the QRCode in the box
@@ -122,16 +122,6 @@ async def create_clean_box(serial_number: str, type_id: int=None, last_cleand=da
     :param: uses:int  - How many times were used - default 0
     """
     box_type = await Types.get(type_id=type_id)
-    await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
-
-async def create_box(serial_number: str, type_id: int=None, last_cleand=None, uses=0):
-    """ Method used to create a new box at Boxes table
-    :param: type_id:int  - Id from the Type of the box
-    :param: serial_number: str - Serial number wroted in the QRCode in the box
-    :param: last_cleand: datetime.object - Now
-    :param: uses:int  - How many times were used - default 0
-    """
-    box_type = await Types.get_or_none(type_id=type_id)
     await Boxes.create(box_type = box_type, serial_number = serial_number, last_cleand = last_cleand, uses = uses)
 
 async def use_box(box_serial_number: str):
@@ -168,18 +158,6 @@ async def get_box(box_serial_number: str):
     """
     try:
         return await Boxes.get(serial_number=box_serial_number)
-    except:
-        raise Exception("Caixa não encontrada")
-
-
-async def get_box2(box_serial_number: str):
-    """ Method used to return a single box object
-
-    :param: box_serial_number:str - Name of the box to select
-    :return: box:Boxes.object - Register with that serial number
-    """
-    try:
-        return await Boxes.filter(serial_number=box_serial_number)
     except:
         raise Exception("Caixa não encontrada")
 
@@ -264,7 +242,7 @@ async def insert_paternoster(serial_number: str, part_number:str):
                                  pat_box_id=box.box_id,
                                  insert_date=datetime.now(tz=None),
                                  pat_pos=pos,
-                                 pat_part_number=part
+                                 pat_part_number_id=part
                                  )
     else:
         raise Exception("Caixa ja inserida")

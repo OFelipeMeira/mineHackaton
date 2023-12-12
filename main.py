@@ -542,7 +542,7 @@ if __name__ == '__main__':
     #     print(e)
 
     # asyncio.run( export_paternoster() )
-    # asyncio.run( import_data() )
+    asyncio.run( import_data() )
     # asyncio.run( create_box() )
     """
     NEED TO EXPORT DATA - pandas

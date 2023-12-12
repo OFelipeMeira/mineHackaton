@@ -42,7 +42,7 @@ class Paternoster:
             "frame_bg": "#D8D1CB",  # Frames - background color
             "tile_font": f"Arial, {self.screen_width*0.034:.0f}",  # Title - Label Main screen
             "scanLabelFont": f"Arial, {self.screen_width*0.025:.0f}",  # Labels for the Scanning screen
-            "btn_font": f"Arial, {self.screen_width*0.017:.0f}",  # Buttons - Font
+            "btn_font": f"Arial, {self.screen_width*0.015:.0f}",  # Buttons - Font
             "btn_fg": "#BFB8B0",  # Buttons - text color
             "btn_color": "#3D3D3D",  # Buttons - colors
             "btn_close_color": "#731D24",  # Button close - color
@@ -135,6 +135,7 @@ class Paternoster:
                                 message=f"Caixa {self.text} adicionada",
                             )
                             print(f"BOX {self.text} ADDED")
+                            self.text = ""
                             # self.show_insert_box_screen()
 
                 # if reads a Position
@@ -168,38 +169,47 @@ class Paternoster:
                     self.text = ""
 
             case ("REMOVE"):
-                if len(self.text) == 4:
+                if len(self.text) == 4 and self.text[0] == "C":
                     # Verifying the readed code :
                     # If is a box:
-                    if self.text[0] == "C":
                         try:
                             self.sync_get_box_data(self.text)
                             self.execute_async_method(self.show_used_pos(self.text))
+                            print(self.setup_variables['paternosterBoxText'])
+                            self.text = ""
+                            self.show_remove_screen()
                         except Exception as e:
                             messagebox.showerror(_SEARCH_ERROR, e)
 
-                    # If is the paternoster postion is getting removed
-                    elif self.text == self.setup_variables["paternosterPosText"]:
-                        try:
+                # If is the paternoster postion is getting removed
+                elif self.text[0] == "P":
+                    # if is correct:
+                    if self.text == self.setup_variables["paternosterPosText"]:
+                        # try:
                             self.sync_remove_paternoster(
                                 self.setup_variables["paternosterBoxText"]
                             )
                             self.reset_variables(self)
-                        except Exception as e:
-                            messagebox.showerror(_REMOVE_ERROR, message=e)
+                            self.text = ""
+                            print("reaload cause position was found")
+                            print("removed")
+                            self.show_remove_screen()
+                        # except Exception as e:
+                        #     messagebox.showerror(_REMOVE_ERROR, message=e)
 
                     # If is a wrong paternoster position
-                    elif self.text[0] == "P":
-                        messagebox.showerror(_REMOVE_ERROR, message=_WRONG_POSITION)
-
-                    # Or if is none of the above
-                    else:
+                    elif len(self.text) == 5:
                         messagebox.showerror(
-                            title=_SEARCH_ERROR, message=_CODE_NOT_FOUNDED
+                            title=_INSERT_ERROR, message=_WRONG_POSITION
                         )
+                        self.reset_variables()
+                        self.text = ""
+                        print("reaload cause position NOT was found")
+                        self.show_remove_screen()
 
+                if len(self.text) >= 5:
+                    messagebox.showerror(title="no code founded", message="Try again")
                     self.text = ""
-                self.show_remove_screen()
 
         # # Reseting self.text after 4 carachteres
         # if len(self.text) > 4:
@@ -227,6 +237,8 @@ class Paternoster:
     async def get_box_data(self, serial):
         await connector.connect()
         box = await connector.get_box(box_serial_number=serial)
+        print("="*30)
+        print(box.serial_number)
         if box:
             self.setup_variables["paternosterBoxText"] = box.serial_number
         await self.show_first_pos()
