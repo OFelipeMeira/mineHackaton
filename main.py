@@ -288,7 +288,7 @@ part_numbers_to_add = [
     "0261S13703",
     "0261S14241",
     "Bloqueio",
-    "Caixas Vazias",
+    "Vazias",
     "0261B00008",
     "0261B32617",
     "0261B33209",
@@ -550,7 +550,7 @@ if __name__ == "__main__":
     #     print(e)
 
     # asyncio.run( export_paternoster() )
-    # asyncio.run( import_data() )
+    asyncio.run( import_data() )
     # asyncio.run( create_box() )
     """
     NEED TO EXPORT DATA - pandas

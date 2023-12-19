@@ -33,7 +33,7 @@ _WRONG_POSITION = "Prateleira Incorreta"
 class Paternoster:
     def __init__(self):
         self.window = Tk()
-        # self.window.attributes('-fullscreen', True)
+        self.window.attributes('-fullscreen', True)
         self.screen_state = "NULL"
         self.text = ""
         self.screen_width = self.window.winfo_screenwidth()
@@ -49,7 +49,7 @@ class Paternoster:
             "entry_font": f"Arial, {self.screen_width*0.02:.0f}",  # Entry - Font
             "entry_bg": "red",
             "entry_fg": "yellow",
-            "treeview_font": f"Arial, {self.screen_width*0.01:.0f}",
+            "treeview_font": f"Arial, {self.screen_width*0.0075:.0f}",
             "scanStatus": "#D8D1CB",
         }
 
