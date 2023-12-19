@@ -153,13 +153,18 @@ async def create_box(
     :param: last_cleand: datetime.object - Now
     :param: uses:int  - How many times were used - default 0
     """
-    box_type = await Types.get(type_id=type_id)
-    await Boxes.create(
-        box_type=box_type,
-        serial_number=serial_number,
-        last_cleand=last_cleand,
-        uses=uses,
-    )
+    if type_id:
+        box_type = await Types.get(type_id=type_id)
+        await Boxes.create(
+            box_type=box_type,
+            serial_number=serial_number,
+            last_cleand=last_cleand,
+            uses=uses,
+        )
+    else:
+        await Boxes.create(
+            serial_number=serial_number,
+        )
 
 
 async def use_box(box_serial_number: str):
@@ -294,7 +299,7 @@ async def insert_paternoster(serial_number: str, part_number: str):
             pat_box_id=box.box_id,
             insert_date=datetime.now(tz=None),
             pat_pos=pos,
-            pat_part_number_id=part,
+            pat_part_number_id=part.pn_id,
         )
     else:
         raise Exception("Caixa ja inserida")
@@ -313,7 +318,10 @@ async def remove_paternoster(box_serial_number: str):
     box = await Boxes.get(serial_number=box_serial_number)
 
     # Getting the register in the Paternoster table of the selected box
-    pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
+    try:
+        pat = await Paternoster.get(pat_box_id=box.box_id, removed_date=None)
+    except:
+        raise Exception("Caixa não encontrada no Paternoster")
 
     # getting today with utc timezone
     now = datetime.now().replace(tzinfo=pytz.utc)

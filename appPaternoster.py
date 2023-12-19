@@ -81,7 +81,9 @@ class Paternoster:
         self.window.mainloop()
 
     def select_pn(self, a):
-        self.setup_variables["part_number"] = self.table.item(self.table.focus())["values"][0]
+        self.setup_variables["part_number"] = self.table.item(self.table.focus())[
+            "values"
+        ][0]
         print(type(self.setup_variables["part_number"]))
         self.show_insert_screen()
 
@@ -129,30 +131,32 @@ class Paternoster:
                         )
                         if response:
                             print(self.text)
+                            print("PRA ADD:" + self.text)
                             self.sync_create_box(self.text)
                             messagebox.showinfo(
                                 title=_INSERT_ERROR,
                                 message=f"Caixa {self.text} adicionada",
                             )
                             print(f"BOX {self.text} ADDED")
-                            self.text = ""
-                            # self.show_insert_box_screen()
+                            self.reset_variables()
+                        self.text = ""
 
                 # if reads a Position
                 elif self.text[0] == "P":
                     # if is correct:
                     if self.text == self.setup_variables["paternosterPosText"]:
                         try:
+                            self.text = ""
                             self.sync_insert_paternoster(
                                 box_name=self.setup_variables["paternosterBoxText"],
                                 part_number=self.setup_variables["part_number"],
                             )
                             self.reset_variables()
-                            self.text = ""
                             print("reaload cause position was found")
                             print("inserted")
                             self.show_insert_screen()
                         except Exception as e:
+                            print(e)
                             messagebox.showerror(title=_INSERT_ERROR, message=e)
                             self.text = ""
                     elif len(self.text) == 5:
@@ -172,30 +176,32 @@ class Paternoster:
                 if len(self.text) == 4 and self.text[0] == "C":
                     # Verifying the readed code :
                     # If is a box:
-                        try:
-                            self.sync_get_box_data(self.text)
-                            self.execute_async_method(self.show_used_pos(self.text))
-                            print(self.setup_variables['paternosterBoxText'])
-                            self.text = ""
-                            self.show_remove_screen()
-                        except Exception as e:
-                            messagebox.showerror(_SEARCH_ERROR, e)
+                    try:
+                        self.sync_get_box_data(self.text)
+                        self.execute_async_method(self.show_used_pos(self.text))
+                        self.text = ""
+                        self.show_remove_screen()
+                        # print(self.setup_variables["paternosterBoxText"])
+                    except Exception as e:
+                        self.text = ""
+                        messagebox.showerror(_SEARCH_ERROR, e)
 
                 # If is the paternoster postion is getting removed
                 elif self.text[0] == "P":
                     # if is correct:
                     if self.text == self.setup_variables["paternosterPosText"]:
-                        # try:
+                        try:
                             self.sync_remove_paternoster(
                                 self.setup_variables["paternosterBoxText"]
                             )
-                            self.reset_variables(self)
+                            self.reset_variables()
                             self.text = ""
                             print("reaload cause position was found")
                             print("removed")
                             self.show_remove_screen()
-                        # except Exception as e:
-                        #     messagebox.showerror(_REMOVE_ERROR, message=e)
+                        except Exception as e:
+                            self.text = ""
+                            messagebox.showerror(_REMOVE_ERROR, message=e)
 
                     # If is a wrong paternoster position
                     elif len(self.text) == 5:
@@ -206,10 +212,6 @@ class Paternoster:
                         self.text = ""
                         print("reaload cause position NOT was found")
                         self.show_remove_screen()
-
-                if len(self.text) >= 5:
-                    messagebox.showerror(title="no code founded", message="Try again")
-                    self.text = ""
 
         # # Reseting self.text after 4 carachteres
         # if len(self.text) > 4:
@@ -237,8 +239,6 @@ class Paternoster:
     async def get_box_data(self, serial):
         await connector.connect()
         box = await connector.get_box(box_serial_number=serial)
-        print("="*30)
-        print(box.serial_number)
         if box:
             self.setup_variables["paternosterBoxText"] = box.serial_number
         await self.show_first_pos()
@@ -287,12 +287,12 @@ class Paternoster:
     def sync_create_box(self, box_name: str):
         self.execute_async_method(self.create_box(box_name=box_name))
 
-    async def filter_part_numbers(self, search_text:str):
+    async def filter_part_numbers(self, search_text: str):
         # self.setup_variables["partNumbers"].append(i["number"])
         await connector.connect()
         for i in await connector.get_part_numbers():
-            if search_text in i['number'] or search_text == "":
-                print(i['number'])
+            if search_text in i["number"] or search_text == "":
+                print(i["number"])
 
     def sync_filter_part_numbers(self, search_text):
         self.execute_async_method(self.filter_part_numbers(search_text))
@@ -300,7 +300,3 @@ class Paternoster:
 
 if __name__ == "__main__":
     asyncio.run(Paternoster())
-
-    """ TO DO
-    ** pandas - não aceita com timezones, tem que tirar
-    """
