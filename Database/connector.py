@@ -6,6 +6,10 @@ import pytz
 from openpyxl import load_workbook
 import pandas as pd
 import pandas.io.sql as pdSql
+from pandas._libs.tslibs import NaT
+
+# pandas._libs.tslibs.nattype.NaTType
+from pandas._libs.tslibs.nattype import NaTType
 import asyncio
 
 """
@@ -456,16 +460,12 @@ async def import_data():
     for index, row in df.iterrows():
         # print(row['index'], row['Posição'], row['Nº da caixa'], row['Nº de tipo'], row['Hora de Entrada'])
 
-        part_number = row["Nº de tipo"]
+        part_number = str(row["Nº de tipo"])
         position = row["Posição"]
         box_serial_number = row["Nº da caixa"]
         paternoster_inserted_date = row["Hora de Entrada"]
 
-        if (
-            type(position) == str
-            and type(part_number) == str
-            and type(box_serial_number) == str
-        ):
+        if validate_data(position, part_number, box_serial_number):
             pos = await PaternosterPositions.get_or_create(pos_name=position)
             pn = await PartNumber.get_or_create(number=part_number)
             box = await Boxes.get_or_create(serial_number=box_serial_number)
@@ -477,4 +477,23 @@ async def import_data():
                 insert_date=str(paternoster_inserted_date),
                 removed_date=None,
             )
-            print("ADDED")
+
+
+def validate_data(position, part_number, box_serial_number):
+    if (
+        type(position) == str
+        and type(part_number) == str
+        and type(box_serial_number) == str
+        and position != "nan"
+    ):
+        print("Valid")
+        return True
+    elif type(position) != str:
+        print("position not str")
+        return False
+    elif type(part_number) != str:
+        print("part_number not str")
+        return False
+    elif type(box_serial_number) != str:
+        print("box_serial_number not str")
+        return False
