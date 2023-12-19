@@ -442,7 +442,8 @@ async def export_paternoster():
         result.append((await Boxes.get(box_id=row.pat_box_id)).serial_number)
         result.append((await PaternosterPositions.get(pos_id=row.pat_pos_id)).pos_name)
         result.append(row.insert_date.replace(tzinfo=None))
-        result.append(row.removed_date)
+        if row.removed_date:
+            result.append(row.removed_date.replace(tzinfo=None))
 
         results.append(result[:])
         result.clear()
